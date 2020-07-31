@@ -1,0 +1,72 @@
+I"O<h1 id="tryhackme---bounty-hacker">TryHackMe - Bounty Hacker</h1>
+<hr />
+
+<p>This is an easy box on <a href="http://tryhackme.com">TryHackMe</a>. Here’s a screenshot of the tasks we’re given to solve:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_tasks.png" alt="" /></p>
+
+<p>Looks pretty straightforward to me so let’s get started by making some directories. I’ll make a directory called <code class="language-plaintext highlighter-rouge">bounty_hacker</code> to hold most of the info on the box as well as a directory just called <code class="language-plaintext highlighter-rouge">nmap</code> in case I need to run multiple scans.
+<br />
+<br /></p>
+
+<h2 id="scan">Scan</h2>
+
+<p>Here’s the scan I’m running:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_nmap.png" alt="" /></p>
+
+<p>There’s a couple of things interesting here. We have 3 ports open on ports 21, 22, and 80. port 21 is running <code class="language-plaintext highlighter-rouge">ftp</code> while 22 is <code class="language-plaintext highlighter-rouge">ssh</code> and finally we have <code class="language-plaintext highlighter-rouge">http</code> on port 80. I’ll start with port 21 and then port 80 if there’s nothing in the ftp service.</p>
+
+<h2 id="ftp-enumeration">ftp Enumeration</h2>
+
+<p>This ftp service allows for anonymous login. Logging in with ftp gives us the following info:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>alex@ubuntu:~/ctf/thm/bounty_hacker$ ftp 10.10.115.128
+Connected to 10.10.115.128.
+220 (vsFTPd 3.0.3)
+Name (10.10.115.128:alex): anonymous
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-rw-r--    1 ftp      ftp           418 Jun 07 21:41 locks.txt
+-rw-rw-r--    1 ftp      ftp            68 Jun 07 21:47 task.txt
+226 Directory send OK.
+ftp&gt;
+</code></pre></div></div>
+<p>After grabbing the files and taking a look we get a file that tells us the answer to <code class="language-plaintext highlighter-rouge">task #3</code> and a list of possible passwords for that potential username.</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_ftpfiles.png" alt="" /></p>
+
+<p>We can use the list of potential passwords as well as the username to try and bruteforce into the machine through <code class="language-plaintext highlighter-rouge">ssh</code> on port 22. I’ll be using hydra to bruteforce into ssh. Here’s the command I’m running:</p>
+
+<p><code class="language-plaintext highlighter-rouge">hydra -l USER -P PASS.txt 10.10.115.128 -t 4 ssh</code></p>
+
+<p>Here’s what we get back from hydra:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_hydra.png" alt="" /></p>
+
+<p>Logging into ssh with these creds we get the user flag:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_user.png" alt="" /></p>
+
+<p>After that, we can run the command <code class="language-plaintext highlighter-rouge">sudo -l</code> to get an idea of what we can run as root. We get the following:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_sudo.png" alt="" /></p>
+
+<p>This tells us that we can run tar as root. The next place to look for info is in <a href="https://gtfobins.github.io/">GTFOBins</a>. GTFOBins allows us to search for unix binaries that are exploitable. So we simply type in the binary we have sudo for, in our case <code class="language-plaintext highlighter-rouge">tar</code>, and we get this back:</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_gtfo.png" alt="" /></p>
+
+<p>So we can take the command on GTFOBins, run it as sudo, and then we should get a root shell back.</p>
+
+<p><img src="/assets/images/bountyhacker/bountyhacker_root.png" alt="" /></p>
+
+<p>And there we have it!</p>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>This box was really straightforward, and used basic CTF concepts to get user and root. This would be a really great first box. All that being said, I really enjoyed this box. Sometimes you just need a nice easy box. Thanks for reading!</p>
+:ET
