@@ -1,0 +1,39 @@
+I"�<h1 id="tryhackme---juice-shop">TryHackMe - Juice Shop</h1>
+<hr />
+
+<p>This is a writeup of the OWASP Juice Shop room on <a href="http://tryhackme.com">TryHackMe</a>. This room is a well-known web application used to learn the OWASP top ten web application security risks, and actually has much more to offer than just the tasks given to us in TryHackMe. For that reason, I’ll be adding onto this at the end of the writeup (and hopefully revisit it over time) in order to better my web application pen testing skills. After all, web applications are one of the most enticing ways to gain access to networks.</p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>Because this is a web application, I’m going to skip the scanning part of this room, and head straight to the web app. Here’s the home page:</p>
+
+<p><img src="assets/images/OWASPJuiceShop/OWASPJuiceShop_Home.png" alt="" /></p>
+
+<p>The room on THM instructs us to move around the webpage and get a feel for how it works. I’ll list some of the more interesting things I see on initial enumeration. Some of the things I’m looking for are: places that recieve user input, login pages, downloads, etc. Here’s an initial list.</p>
+
+<ul>
+  <li>Search bar at the top of the page</li>
+  <li>Customer Feedback page</li>
+  <li>Login page</li>
+  <li>Cookie usage</li>
+  <li>Recycling box request page</li>
+  <li>info disclosure under the products, reveals usernames to try to break into</li>
+  <li>Download on the about us page gives us possible ftp.</li>
+</ul>
+
+<p>That’s all from the initial messing around which took about ~5-10 minutes. I’m sure that I’ll see more as I dive deeper into the box.</p>
+
+<h2 id="injection">Injection</h2>
+
+<p>The first task on the webpage is to successfully login to the admin account using SQL injeciton. This particular SQL injection will work by typing malicious input into the login. The web app doesn’t properly sanitize the input, and reads it in such a manner that just lets us waltz right into the admin’s dashboard. The only piece of info we really need, the admin’s email, can be found in the apple juice product on the homepage. If we click on the product, it gives us access to the reviews. One has been submitted by <code class="language-plaintext highlighter-rouge">admin@juice-sh.op</code> so we can use that email to login.</p>
+
+<p align="center">
+  <img src="assets/images/OWASPJuiceShop/OWASPJuiceShop_admin.png" />
+</p>
+
+<p>So the final piece of the SQL injection is to add <code class="language-plaintext highlighter-rouge">'--</code> to the end of the admin’s email and then we will be able to type whatever password we want and gain access to the admin’s account. This is due to the input of the special characters being handled poorly. More specifically, the input is being interpreted by SQL as commenting out the password. We get a green notification at the top of the screen when we successfully login as admin.</p>
+
+<h2 id="broken-authentication">Broken Authentication</h2>
+
+<p>The next task is broken authentication. We are given the details of exploiting bugs in the authentication process as well as an insecure forgotten password mechanism. We’ll start with resetting Jim’s password. Again, we can verify jim’s email by looking through the products and seeing that a review for the green smoothie has been left by <code class="language-plaintext highlighter-rouge">jim@juice-sh.op</code>. His comment is also interesting <code class="language-plaintext highlighter-rouge">Fresh out of a replicator.</code></p>
+:ET
