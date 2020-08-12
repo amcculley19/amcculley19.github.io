@@ -1,0 +1,90 @@
+I"�<h1 id="tryhackme---gotta-catchem-all">TryHackMe - Gotta Catch’em All!</h1>
+<hr />
+
+<p>This is a writeup of the Gotta Catch’em All! room on <a href="https://tryhackme.com">TryHackMe</a>. TryHackMe has been the single greatest resource for a n00b like me to gain some hacking skills over the past seven months or so. Not only are the walkthroughs super helpful, but the cost is very reasonable and features just keep coming. If you’re interested in cybersecurity, give it a look. I’m going to be honest here, the real reason I’m doing this room is for nostalgia’s sake. I loved pokemon as a kid so I’m pretty excited to see what this box has in store.</p>
+
+<h2 id="nmap-scan">nmap Scan</h2>
+
+<p>As always, I’m going to start the box by organizing my directories. I’ll name the main directory <code class="language-plaintext highlighter-rouge">pokemon</code> and place an <code class="language-plaintext highlighter-rouge">nmap</code> directory inside of it to hold all the scans.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sC -sV -oN nmap/pokemon_initial.txt 10.10.38.223
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-10 11:46 CDT
+Nmap scan report for 10-10-38-223-static.midco.net (10.10.38.223)
+Host is up (0.14s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|_  2048 58:14:75:69:1e:a9:59:5f:b2:3a:69:1c:6c:78:5c:27 (RSA)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-title: Can You Find Them All?
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 152.10 seconds
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<h2 id="web-enumeration">Web Enumeration</h2>
+
+<p>Looks like there’s two ports open, 22 and 80 running <code class="language-plaintext highlighter-rouge">ssh</code> and <code class="language-plaintext highlighter-rouge">http</code> respectively. The website greets us with the default Apache 2 welcome screen. Running gobuster gives us nothing of importance, but looking at the source code gives us some interesting things.</p>
+
+<p>We get a script tag with random pokemon, in addition to that it tells us to check the console and gives us an array of those random pokemon when we get there. There are also some html tags toward the bottom of the home page that look suspicious so I’ll try logging in via ssh with the tags as creds.
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_user.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="foothold-and-user-flags">Foothold and User Flags</h2>
+
+<p>It worked! Moving into the <code class="language-plaintext highlighter-rouge">Desktop</code> directory reveals a zip file. Unzipping the file gives us a directory and inside there is a file named <code class="language-plaintext highlighter-rouge">grass-type.txt</code>. Looking at the file, it appears to be in hex. Plugging that into <a href="https://gchq.github.io/CyberChef/">CyberChef</a> gives us the answer.
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_grass.png" alt="" />
+<br />
+<br /></p>
+
+<p>Poking around a little bit more I found a directory in <code class="language-plaintext highlighter-rouge">/etc</code> called <code class="language-plaintext highlighter-rouge">why_am_i_here ?</code>. The directory contained a file called <code class="language-plaintext highlighter-rouge">fire-type.txt</code>. The text is encoded in what appears to be base64 so if we run the command <code class="language-plaintext highlighter-rouge">cat fire-type.txt | base64 -d</code> we can get the decoded flag.
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_fire.png" alt="" />
+<br />
+<br /></p>
+
+<p>We get a hint from the room on question 2. It tells us to check the website. The website files are probably held in <code class="language-plaintext highlighter-rouge">/var/www/html</code>. Navigating there we see a file called <code class="language-plaintext highlighter-rouge">water-type.txt</code>. This string appears to be some kind of rotation cipher. Using <a href="https://gchq.github.io/CyberChef/">CyberChef</a>, I decoded the rotation cipher and got the flag.
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_water.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="root">Root</h2>
+
+<p>Looking around the system in the <code class="language-plaintext highlighter-rouge">pokemon</code> user’s home directory I stumbled on an interesting path in the <code class="language-plaintext highlighter-rouge">Videos</code> directory. At the end of that trail was a file that looked like it gave creds for another user.
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_ash.png" alt="" />
+<br />
+<br /></p>
+
+<p>This led me to the final flag, which was in a file called <code class="language-plaintext highlighter-rouge">roots-pokemon.txt</code>
+<br />
+<br /></p>
+
+<p><img src="assets/images/pokemon/pokemon_root.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>Quick room. Honestly, the box was a little messy, but still a fun way to kill a an hour or two. For beginners this is a good way to dip your toes into encryption and navigation of the linux file system as well as some other basic commands. Thanks for reading if you’ve gotten this far!</p>
+:ET
