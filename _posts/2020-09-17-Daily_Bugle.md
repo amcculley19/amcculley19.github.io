@@ -50,4 +50,12 @@ It looks like we have port 22 and port 80 open. There's a website with disallowe
 
 ## web enumeration
 
-The page is pretty basic for the most part. Looks like one post about spider-man robbing a bank. There's a login form to the side that gives us an interesting url to test for sqli. I'm going to use SQLmap to test the page.
+The page is pretty basic for the most part. Looks like one post about spider-man robbing a bank. There's a login form to the side that gives us an interesting url to test for sqli. Testing out the robots.txt disallowed entries leads me to a Joomla login page. It turns out that in the repos for kali there is a tool for enumerating Joomla called `joomscan`. We can download the tool with `sudo apt install joomscan`. Once installed we can run it on the box with `joomscan -u http://10.10.60.90/`. It returns all kinds of valuable info such as firewalls, version info, and robots.txt disallowed entries (although we already knew those from the nmap scan). Turns out we're dealing with `Joomla 3.7.0` which has a known exploit on [exploit-db](https://www.exploit-db.com/exploits/42033). While this is not a manual exploit, it gives us valuable info on how to run sqlmap to get a database dump. It contains the following command:
+<br>
+<br>
+
+`sqlmap -u "http://<machine-ip>/index.php?option=com_fields&view=fields&layout=modal&list[fullordering]=updatexml" --risk=3 --level=5 --random-agent --dbs`
+<br>
+<br>
+
+Now, this command gives us a dump of the databases, but once it returns we'll need to run it again with a more specific `-D` to specify one of the databases to dump. A tool like `SQLmap`, while great is not allowed on the OSCP, so I may go back and try it with a manual exploit (assuming there is one), but for now I need some more practice with `SQLmap` so I'm not too concerned about it at this point.
