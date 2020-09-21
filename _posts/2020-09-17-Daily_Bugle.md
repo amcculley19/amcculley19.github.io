@@ -1,10 +1,10 @@
 ---
 title: Daily Bugle Writeup
-published: false
+published: true
 ---
 # TryHackMe - Daily Bugle  
 ___________________________
-![](assets/images/dailybugle/dailybugle_joomlalogin.png)
+![](assets/images/dailybugle/dailybugle_box.png)
 <br>
 <br>
 
@@ -252,6 +252,6 @@ Anytime I encounter a situation like this I head to [GTFOBins](https://gtfobins.
 
 ## final thoughts
 
-This one was a doozy. I think the `SQLmap` was the hardest part of this room. The admin panel took a minute as well to figure out where I needed to upload. The root was probably the easiest part. Anyway, I learned a good amount and I got some practice with `SQLmap` as well. Thanks for reading if you've come this far!
+This one was a doozy. I think the `SQLmap` was the hardest part of this room. The admin panel took a minute as well to figure out where I needed to upload. The root was probably the easiest part. Anyway, I learned a good amount and I got some practice with `SQLmap` as well. Thanks for reading if you've come this far, and a big thanks to all the folks who made this box.
 <br>
 <br>
