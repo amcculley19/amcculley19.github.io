@@ -1,0 +1,111 @@
+I"�<h1 id="tryhackme---startup">TryHackMe - Startup</h1>
+<hr />
+<p>This is an easy box on TryHackMe that came out not that long ago. I haven’t done many ctfs recently (new job, crazy hours), and I just needed to get back into the swing of things. This box looked like the perfect place to start. I’m probably
+<br />
+<br /></p>
+
+<h2 id="threader3000-scan">threader3000 scan</h2>
+
+<p>I scanned this box with <a href="https://github.com/dievus/threader3000">threader3000</a> which is a multi-threaded port scanner that can save a ton of time on boxes where you suspect there’s a higher port open. It can also run an nmap scan after finding the open ports. Here’s the output from the nmap scan:
+<br />
+<br /></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| drwxrwxrwx    2 65534    65534        4096 Nov 09 02:12 ftp [NSE: writeable]
+|_-rw-r--r--    1 0        0             208 Nov 09 02:12 notice.txt
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 10.13.1.218
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 42:67:c9:25:f8:04:62:85:4c:00:c0:95:95:62:97:cf (RSA)
+|   256 dd:97:11:35:74:2c:dd:e3:c1:75:26:b1:df:eb:a4:82 (ECDSA)
+|_  256 27:72:6c:e1:2a:a5:5b:d2:6a:69:ca:f9:b9:82:2c:b9 (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Maintenance
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/
+</code></pre></div></div>
+
+<p>As you can see we have ports 21(ftp), 22(ssh), and 80(http) open. ftp is allowing anonymous login, which is always great for hackers.
+<br />
+<br /></p>
+
+<h2 id="ftp-enumeration">ftp enumeration</h2>
+
+<p>Investigating the ftp service on port 21 (you can do this with the command <code class="language-plaintext highlighter-rouge">ftp STARTUP-IP</code> and then using the user name <code class="language-plaintext highlighter-rouge">anonymous</code> and leaving a blank password when prompted) gives us a couple of files that we can pull from the service with ‘get FILE_NAME’.
+<br />
+<br /></p>
+
+<p><img src="assets/images/startup/startup_ftp.png" alt="" />
+<br />
+<br /></p>
+
+<p>There’s a file called notice.txt that contains the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Whoever is leaving these damn Among Us memes in this share, it IS NOT FUNNY.
+People downloading documents from our website will think we are a joke! Now I
+dont know who it is, but Maya is looking pretty sus.
+</code></pre></div></div>
+
+<p>hmmm, there is the possible username <code class="language-plaintext highlighter-rouge">Maya</code>, but it also mentions people downloading documents thinking the company is a joke, did they link the ftp fileshare to their website?
+<br />
+<br /></p>
+
+<h2 id="web-enumeration">web enumeration</h2>
+
+<p>The webpage states it’s under development. The source code doesn’t give us any extra info either.</p>
+
+<p><img src="assets/images/startup/startup_webpage.png" alt="" />
+<br />
+<br /></p>
+
+<p>The next step is to run a gobuster scan to see if there’s any interesting directories on the website. The result of the <code class="language-plaintext highlighter-rouge">gobuster</code> scan is only one directory:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/files (Status: 301)
+</code></pre></div></div>
+
+<p>navigating to the <code class="language-plaintext highlighter-rouge">/files</code> directory gives us the follwing page:</p>
+
+<p><img src="assets/images/startup/startup_files.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="initial-access">initial access</h2>
+
+<p>They did indeed link the ftp file share to the webpage. If we can upload a file to the ftp directory, we can try and get a reverse shell. I’ll use the standard <code class="language-plaintext highlighter-rouge">php-reverse-shell.php</code> file that comes with both kali and parrotOS. We’ll need to change the IP and port in that file to that of our attacking machine. After that, we can set up a listener on our attacking machine and access the file through our browser to activate the malicious php script on our victim machine.</p>
+
+<p>After changing the IP and port in the php script, we can navigate back to the ftp directory through the fileshare on the command line. We can upload the php reverse shell with the command <code class="language-plaintext highlighter-rouge">put php-reverse-shell.php</code> and we should get a message indicating the file uploaded properly.</p>
+
+<p><img src="assets/images/startup/startup_shell.png" alt="" />
+<br />
+<br /></p>
+
+<p>Once we’ve got this shell uploaded, we need to setup a netcat listener on our attacking machine with the command <code class="language-plaintext highlighter-rouge">nc -lvnp REV-SHELL-PORT</code>. From there, it’s as simple as navigating back to the <code class="language-plaintext highlighter-rouge">files</code> in our browser and clicking on our file.
+<br />
+<br /></p>
+
+<p><img src="assets/images/startup/startup_ftpfile.png" alt="" />
+<br />
+<br /></p>
+
+<p><img src="assets/images/startup/startup_initial.png" alt="" />
+<br />
+<br /></p>
+
+<p>As you can see, this gives us an initial shell as <code class="language-plaintext highlighter-rouge">www-data</code>. We can’t access the user flag, but there is a user named <code class="language-plaintext highlighter-rouge">lennie</code> that we can try and move to.</p>
+
+<h2 id="user-privilege-escalation">user privilege escalation</h2>
+:ET
