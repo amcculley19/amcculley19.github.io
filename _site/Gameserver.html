@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <meta name="generator" content="Jekyll">
+
+  <link rel="shortcut icon" href="http://localhost:8000//favicon.ico">
+
+  <title>Gameserver Writeup</title>
+
+  <link rel="stylesheet" href="/css/main.css">
+
+  <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="ATOM Feed" /> <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Gameserver Writeup | Rooted</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Gameserver Writeup" />
+<meta name="author" content="alex" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="TryHackMe - Gameserver" />
+<meta property="og:description" content="TryHackMe - Gameserver" />
+<link rel="canonical" href="http://localhost:8000/Gameserver" />
+<meta property="og:url" content="http://localhost:8000/Gameserver" />
+<meta property="og:site_name" content="Rooted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-10-10T00:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Gameserver Writeup" />
+<script type="application/ld+json">
+{"url":"http://localhost:8000/Gameserver","headline":"Gameserver Writeup","dateModified":"2020-10-10T00:00:00-05:00","datePublished":"2020-10-10T00:00:00-05:00","author":{"@type":"Person","name":"alex"},"@type":"BlogPosting","description":"TryHackMe - Gameserver","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:8000/Gameserver"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+</head>
+
+
+<body>
+  <div id="wrapper">
+    <header>
+  <div>
+    <a href="/">
+    
+    <h1>alex@home:~$</h1>
+    </a>
+    <div class="header-links">
+      <a href="/archive"><h2 class="header-link">Archive</h2></a>
+<a href="/about"><h2 class="header-link">About</h2></a>
+<a href="/atom.xml"><h2 class="header-link">RSS</h2></a>
+    </div>
+  </div>
+</header>
+
+    <div class="container">
+      <section id="main_content">
+        <article>
+  <h2>Gameserver Writeup</h2>
+  <time datetime="2020-10-10T00:00:00-05:00" class="by-line">10 Oct 2020</time>
+  <h1 id="tryhackme---gameserver">TryHackMe - Gameserver</h1>
+<hr />
+
+<p>This room is an easy room, but the privilege escalation involves lxd which is a linux container manager I’d say that it’s similar to docker, but containers in general are still confusing to me so I can’t verify for sure. I’ve done one other box involving a privilege escalation via lxd, but I really fumbled through it. Anyway, let’s get started with gameserver.</p>
+
+<h2 id="initial-scan">initial scan</h2>
+
+<p>I’ve been using <a href="https://github.com/dievus/threader3000">threader3000</a> for the past couple of boxes, and I’ve got to say, I’m a big fan of the ability to scan all the ports so quickly and then use nmap to further scan the open ports. Here’s the results of the nmap scan after running threader3000.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -p22,80 -sV -sC -T4 -Pn -oA 10.10.94.27 10.10.94.27
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-07 19:27 CDT
+Nmap scan report for 10.10.94.27
+Host is up (0.24s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 34:0e:fe:06:12:67:3e:a4:eb:ab:7a:c4:81:6d:fe:a9 (RSA)
+|   256 49:61:1e:f4:52:6e:7b:29:98:db:30:2d:16:ed:f4:8b (ECDSA)
+|_  256 b8:60:c4:5b:b7:b2:d0:23:a0:c7:56:59:5c:63:1e:c4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: House of danak
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 17.70 seconds
+</code></pre></div></div>
+
+<p>Seems simple enough, only port 22 running ssh and port 80 running http. We’ll start with enumeration of the website.</p>
+
+<h2 id="web-enumeration">web enumeration</h2>
+
+<p>The website contains information about a game called house of danak. Looking at the source code gives us a good hint for a username, <code class="language-plaintext highlighter-rouge">john</code>.
+<br />
+<br /></p>
+
+<p><img src="assets/images/gameserver/gameserver_comment.png" alt="" />
+<br />
+<br /></p>
+
+<p>I’m going to run dirsearch on this box, I’ve seen it around and wanted to give it a shot over gobuster. I really like gobuster as a tool, but I wanted to branch out and try another directory brute forcing tool.
+<br />
+<br /></p>
+
+<p><img src="assets/images/gameserver/gameserver_dirsearch.png" alt="" />
+<br />
+<br /></p>
+
+<p>There’s a few insteresting things here, but I think the more obvious one is the <code class="language-plaintext highlighter-rouge">secret</code> directory. Navigating there we’re greeted with a very interesting piece of information:
+<br />
+<br /></p>
+
+<p><img src="assets/images/gameserver/gameserver_privatekey.png" alt="" />
+<br />
+<br /></p>
+
+<p>That looks like a private ssh key to me. We can grab that with a simple wget command to the <code class="language-plaintext highlighter-rouge">secret</code> directory <code class="language-plaintext highlighter-rouge">wget http://IP-ADDRESS/secret</code>. Now we can try to logon to the victim machine with the username from earlier using this key. We can do so with the following command:</p>
+
+<p><code class="language-plaintext highlighter-rouge">ssh -i secretKey john@VICTIM_IP_ADDRESS</code>
+<br />
+<br /></p>
+
+<p>This gives us initial access to the machine and the user flag.</p>
+
+<p><img src="assets/images/gameserver/gameserver_user.png" alt="" />
+<br />
+<br /></p>
+
+<p>I won’t spend too much time on the enumeration side of things. That’s not the real reason I went for this machine. As I said at the beginning of this writeup, I wanted some practice with container privilege escalation. Basically the idea of this kind of priv esc is to build a container that mounts the host’s root file system into a container giving access to the root user’s files. I found <a href="https://www.hackingarticles.in/lxd-privilege-escalation/">this</a> article the first time that I had to use this kind of priv esc and I think it does a decent job of describing how to do the priv esc. You have to download a github repo that builds the framework for a container on your attacking machine. Once you have that you can upload to the victim machine and build the container that gives you root access. From that point it’s a simple navigation to the <code class="language-plaintext highlighter-rouge">/mnt</code> directory where you can see the mounted root files.
+<br />
+<br /></p>
+
+<p><img src="assets/images/gameserver/gameserver_root.png" alt="" />
+<br />
+<br /></p>
+
+</article>
+      </section>
+    </div>
+  </div>
+
+   <footer>
+  <a href="https://creativecommons.org/licenses/by-nc/3.0/deed.en_US">
+    <span>
+        <b>alex</b>
+    </span>
+    
+    <span>© 2021</span>
+  </a>
+</footer>
+
+
+  
+</body>
+
+</html>

