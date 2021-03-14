@@ -5,7 +5,14 @@ title: About
 
 # About
 
-This website is to keep track of my progress preparing for the OSCP. Right now I only work part-time teaching kids how to program, but I'm hoping to move into offensive security in the near future.
+I like computers. Specifically, I like cybersecurity, linux, and networking. While most posts are going to be ctf writeups, I'm also planning on posting on whatever certification that I'm going after on the way to the OSCP. First up, CompTIA A+.
 
 
-I'm active on Hack the Box as well as Try Hack Me, and I'll be posting about whatever it is I'm studying for the week as well. 
+I'm on social media, but I'm a big advocate for leaving behind the traditional sites like twitter, facebook and instagram for more decentralized approaches so I'll be most active there.
+
+
+Mastodon:
+<a rel="me" href="https://rcsocial.net/@alexmcculley19">Mastodon</a>
+
+Twitter:
+<a href="https://twitter.com/alexmcculley19?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow @alexmcculley19</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

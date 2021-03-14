@@ -1,9 +1,9 @@
 title: Rooted
-description: "CTF writeups, infosec resources, and projects."
+description: "CTF writeups, resources, and certification studying blog posts."
 author:
   name: "alex"
-  email: "alexmcculley19@gmail.com"
-  url: "https://amcculley1894.github.io"
+  email: "alexmcculley19@protonmail.com"
+  url: "https://alexmcculley19.github.io"
 
 baseurl: /
 
@@ -29,4 +29,4 @@ plugins:
 
 # Custom variables
 owner : "alex"
-year : "2020"
+year : "2021"
