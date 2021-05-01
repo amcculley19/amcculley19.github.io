@@ -5,7 +5,7 @@ title: About
 
 # About
 
-I like computers. Specifically, I like cybersecurity, linux, and networking. This site is for ctf writeups, certification studying updates, and
+I like computers. Specifically, I like cybersecurity, linux, and networking. This site is for ctf writeups, certification studying updates, and other projects I might be working on. 
 
 
 I'm on social media, but I'm a big advocate for leaving behind the traditional sites like twitter, facebook and instagram for more decentralized approaches so I'll be most active there.
