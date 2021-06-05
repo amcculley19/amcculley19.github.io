@@ -27,7 +27,7 @@
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Hackpark Writeup" />
 <script type="application/ld+json">
-{"url":"http://localhost:8000/Hackpark","headline":"Hackpark Writeup","dateModified":"2020-08-25T00:00:00-05:00","datePublished":"2020-08-25T00:00:00-05:00","author":{"@type":"Person","name":"alex"},"@type":"BlogPosting","description":"TryHackMe - Hackpark","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:8000/Hackpark"},"@context":"https://schema.org"}</script>
+{"@type":"BlogPosting","description":"TryHackMe - Hackpark","url":"http://localhost:8000/Hackpark","headline":"Hackpark Writeup","dateModified":"2020-08-25T00:00:00-05:00","datePublished":"2020-08-25T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:8000/Hackpark"},"author":{"@type":"Person","name":"alex"},"@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 </head>
@@ -162,14 +162,14 @@ Progress: 124708 / 220561 (56.54%)^C
 <br />
 <br /></p>
 
-<p><code class="language-plaintext highlighter-rouge">
-hydra -l &lt;username&gt; -p &lt;password list&gt; &lt;IP Address&gt; http-form-post &lt;login page:request headers:failed login message&gt;
-</code>
+<p>`
+hydra -l <username> -p <password list=""> <IP Address=""> http-form-post <login page:request="" headers:failed="" login="" message="">
+`
 <br />
 <br />
-As I said before I’ll be using the username <code class="language-plaintext highlighter-rouge">admin</code> and the password list rockyou.txt. The parameters can be found a few ways, but the easiest is in burp suite. Type in any username and password, then look at where the POST request is getting sent to, in our case, it’s <code class="language-plaintext highlighter-rouge">/Account/login.aspx</code>. We’ll type that into the <code class="language-plaintext highlighter-rouge">login page</code> of our command. Then find the headers by looking at the bottom of the request where it starts with <code class="language-plaintext highlighter-rouge">__VIEWSTATE...</code> and replace your username with <code class="language-plaintext highlighter-rouge">^USER^</code> and password with <code class="language-plaintext highlighter-rouge">PASS</code>, then copy and paste that into the command as the <code class="language-plaintext highlighter-rouge">request headers</code>. Finally send the request through and see that the failed login says <code class="language-plaintext highlighter-rouge">Login failed</code> and type that into the <code class="language-plaintext highlighter-rouge">failed login message</code>. The BurpSuite window you need and the end result should look something like this:
+As I said before I'll be using the username `admin` and the password list rockyou.txt. The parameters can be found a few ways, but the easiest is in burp suite. Type in any username and password, then look at where the POST request is getting sent to, in our case, it's `/Account/login.aspx`. We'll type that into the `login page` of our command. Then find the headers by looking at the bottom of the request where it starts with `__VIEWSTATE...` and replace your username with `^USER^` and password with `PASS`, then copy and paste that into the command as the `request headers`. Finally send the request through and see that the failed login says `Login failed` and type that into the `failed login message`. The BurpSuite window you need and the end result should look something like this:
 <br />
-<br /></p>
+<br /></login></IP></password></username></p>
 
 <p><img src="assets/images/hackpark/hackpark_hydra.png" alt="BurpSuite Request Image" />
 <br />
