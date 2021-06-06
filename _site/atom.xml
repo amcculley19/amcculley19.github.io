@@ -33,9 +33,15 @@
 &lt;p&gt;The 1002 exam is interesting. I seem to have the same level of understanding when it comes to OS, security, and operational procedures, but software troubleshooting is a pain point for me. I think part of that stems from my lack of Windows understanding. That’s going to be a big study point for me in this final stretch of time before the exam.&lt;/p&gt;
 </description>
         <pubDate>Sat, 01 May 2021 00:00:00 -0500</pubDate>
+<<<<<<< HEAD
         <link>//CompTIA_A+_Plan</link>
         <link href="/CompTIA_A+_Plan"/>
         <guid isPermaLink="true">/CompTIA_A+_Plan</guid>
+=======
+        <link>http://localhost:8000//CompTIA_A+_Plan</link>
+        <link href="http://localhost:8000/CompTIA_A+_Plan"/>
+        <guid isPermaLink="true">http://localhost:8000/CompTIA_A+_Plan</guid>
+>>>>>>> 7e57f0fa9091bc2344111ed23b862026e593b4d5
       </item>
     
       <item>
@@ -1690,9 +1696,15 @@ Nmap done: 1 IP address (1 host up) scanned in 152.10 seconds
 &lt;p&gt;Quick room. Honestly, the box was a little messy, but still a fun way to kill a an hour or two. For beginners this is a good way to dip your toes into encryption and navigation of the linux file system as well as some other basic commands. Thanks for reading if you’ve gotten this far!&lt;/p&gt;
 </description>
         <pubDate>Tue, 11 Aug 2020 00:00:00 -0500</pubDate>
+<<<<<<< HEAD
         <link>//Pokemon</link>
         <link href="/Pokemon"/>
         <guid isPermaLink="true">/Pokemon</guid>
+=======
+        <link>http://localhost:8000//Pokemon</link>
+        <link href="http://localhost:8000/Pokemon"/>
+        <guid isPermaLink="true">http://localhost:8000/Pokemon</guid>
+>>>>>>> 7e57f0fa9091bc2344111ed23b862026e593b4d5
       </item>
     
   </channel>
